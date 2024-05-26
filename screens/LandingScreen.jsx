@@ -23,7 +23,7 @@ const width = Dimensions.get("window").width;
 
 const LandingScreen = ({ navigation }) => {
   const [categories, setCategories] = useState([""]);
-  const [resellers, setResellers] = useState([""]);
+  const [suppliers, setSuppliers] = useState([""]);
   const [ads, setAds] = useState([""]);
   const [useremail, setUseremail] = useState("");
   const [loggedUser, setLoggedUser] = useState("");
@@ -41,13 +41,13 @@ const LandingScreen = ({ navigation }) => {
       console.log(error);
     }
   };
-  const getResellers = async () => {
+  const getSuppliers = async () => {
     try {
       const response = await axios.get(
-        "https://res-server-sigma.vercel.app/api/user/usersdata"
+        "https://res-server-sigma.vercel.app/api/shop/sellers"
       );
       const collected = response.data;
-      setResellers(collected);
+      setSuppliers(collected);
     } catch (error) {
       console.log(error);
     }
@@ -95,7 +95,7 @@ const LandingScreen = ({ navigation }) => {
 
   useEffect(() => {
     getCategories();
-    getResellers();
+    getSuppliers();
     getAds();
     getEmail();
     getUserInfo();
@@ -166,18 +166,27 @@ const LandingScreen = ({ navigation }) => {
               <Text className="text-slate-600 text-orange-400">View more</Text>
             </View>
 
-            <View className="w-full flex-row px-5 justify-between items-center">
-              {resellers.slice(0, 4).map((reseller) => {
+            <View className="flex-1 justify-between items-center flex-row px-5">
+              {suppliers.slice(0,4).map((supplier) => {
                 return (
                   <TouchableOpacity
-                    onPress={()=>navigation.navigate('SupplierView',{supplierId:reseller._id})}
+                    onPress={()=>navigation.navigate('SupplierView',{
+                        supplierId:supplier._id,
+                        supplierFirstName:supplier.firstName,
+                        supplierLastName:supplier.lastName,
+                        supplierEmail:supplier.email,
+                        supplierPhone:supplier.phoneNumber,
+                        supplierExRate:supplier.dollarExchangeRate,
+                        supplierAddress:supplier.address,
+  
+                    })}
                     className="justify-center items-center bg-slate-300 rounded-full h-20 w-20 p-3"
                   >
                     <Image
                       source={require("../assets/images/reseller.png")}
                       className="h-10 w-10"
                     />
-                    <Text className="text-slate-500">{reseller.firstName}</Text>
+                    <Text className="text-slate-500">{supplier.firstName}</Text>
                   </TouchableOpacity>
                 );
               })}
