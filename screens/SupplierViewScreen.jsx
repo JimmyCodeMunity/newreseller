@@ -11,123 +11,81 @@ import {
   TouchableOpacity,
   Text,
   Dimensions,
-  KeyboardAvoidingView,
-  Platform,
   Linking,
+  TextInput,
 } from "react-native";
 import { Table, TableWrapper, Row, Rows } from "react-native-table-component";
 import axios from "axios";
 import * as Icon from "react-native-feather";
 import Modal from "react-native-modal";
-import { StatusBar } from "expo-status-bar";
+import { Appbar } from "react-native-paper";
 import Loading from "../components/Loading";
 import { useCurrency } from "../components/CurrrencyProvider";
-import { Appbar } from "react-native-paper";
 
 const windowHeight = Dimensions.get("window").height;
-const windowWidth = Dimensions.get("window").width;
 
 const Manufacturer = ({ route, navigation }) => {
   const [tableHead, setTableHead] = useState([
-    "",
     "Name",
     "PartNo.",
     "Price",
     "Action",
   ]);
-  const [tableData, setTableData] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [timeModalVisible, setTimeModalVisible] = useState(false);
+  const [selected, setSelected] = useState([]);
   const [productsNotFound, setProductsNotFound] = useState(false);
+  const { isDollar, setIsDollar } = useCurrency();
+
   const {
     supplierId,
     supplierFirstName,
     supplierLastName,
-    supplierEmail,
     supplierPhone,
-    supplierExRate
+    supplierExRate,
   } = route.params;
-  const supplierFullName = supplierFirstName + " " + supplierLastName;
-  //   console.log(supplierId)
+  const supplierFullName = `${supplierFirstName} ${supplierLastName}`;
 
-  const [selected, setSelected] = useState([]);
-  const [timeModalVisible, setTimeModalVisible] = useState(false);
-  const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [selectedProductDescription, setSelectedProductDescription] = useState(
-    []
-  );
-  const [filterModal, setFilterModal] = useState(false);
+  const [searchFilter, setSearchFilter] = useState("");
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const { isDollar, setIsDollar } = useCurrency();
-
-  const [priceFilter, setPriceFilter] = useState("");
-  const [nameFilter, setNameFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [brandFilter, setBrandFilter] = useState("");
-
-  const [value, setValue] = useState(null);
-  const [isFocusCat, setIsFocusCat] = useState(false);
-  const [isFocusPrice, setIsFocusPrice] = useState(false);
-  const [selectedPriceRange, setSelectedPriceRange] = useState("");
-  // Inside your component...
-  const [partNumberFilter, setPartNumberFilter] = useState(""); // Add this state variable
-
-  const closeModal = () => {
-    setModalVisible(false);
-  };
+  const closeModal = () => setModalVisible(false);
 
   const handleCall = () => {
-    const phoneNumber = manPhone;
+    const phoneNumber = supplierPhone.slice(-9);
     const countryCode = "+254";
+    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+    const phoneURL = `tel:${fullPhoneNumber}`;
 
-    // Check if the phone number is valid
-    if (manPhone) {
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-      // Construct the phone call URL
-      const phoneURL = `tel:${fullPhoneNumber}`;
-
-      // Open the phone app with the specified phone number
-      Linking.canOpenURL(phoneURL)
-        .then((supported) => {
-          if (!supported) {
-            console.error("Phone calls are not supported on this device");
-          } else {
-            return Linking.openURL(phoneURL);
-          }
-        })
-        .catch((error) => console.error(`Error opening phone app: ${error}`));
-    } else {
-      console.error("Phone number is not available");
-    }
+    Linking.canOpenURL(phoneURL)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(phoneURL);
+        } else {
+          console.error("Phone calls are not supported on this device");
+        }
+      })
+      .catch((error) => console.error(`Error opening phone app: ${error}`));
   };
 
-  //handle whatsapp
   const handleWhatsapp = () => {
-    const phoneNumber = manPhone;
+    const phoneNumber = supplierPhone.slice(-9);
     const countryCode = "+254";
-    if (phoneNumber) {
-      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
-      const phoneURL = `tel:${fullPhoneNumber}`;
-      // Construct the WhatsApp chat URL
-      const whatsappURL = `https://wa.me/${fullPhoneNumber}`;
+    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+    const whatsappURL = `https://wa.me/${fullPhoneNumber}`;
 
-      // Open the WhatsApp chat with the specified phone number
-      Linking.canOpenURL(whatsappURL)
-        .then((supported) => {
-          if (!supported) {
-            console.error("WhatsApp is not installed on this device");
-          } else {
-            return Linking.openURL(whatsappURL);
-          }
-        })
-        .catch((error) =>
-          console.error(`Error opening WhatsApp chat: ${error}`)
-        );
-    } else {
-      console.error("Phone number is not available");
-    }
+    Linking.canOpenURL(whatsappURL)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(whatsappURL);
+        } else {
+          console.error("WhatsApp is not installed on this device");
+        }
+      })
+      .catch((error) => console.error(`Error opening WhatsApp chat: ${error}`));
   };
 
   useEffect(() => {
@@ -139,38 +97,19 @@ const Manufacturer = ({ route, navigation }) => {
     try {
       const response = await axios.get(
         `https://res-server-sigma.vercel.app/api/product/productlist/${supplierId}`,
-        {
-          timeout: 10000,
-        }
+        { timeout: 10000 }
       );
       const apiData = response.data;
-    //   console.log("collected products", apiData);
+      setProducts(apiData);
       setFilteredProducts(apiData);
-      setProducts(apiData); // Update the products state
       setLoading(false);
-
-      if (apiData.length > 0) {
-        setTableHead(["Name", "PartNo.", "Price", "Action"]);
-
-        const rows = apiData.map((item, index) => [
-          item.name,
-          item.partNumber,
-          item.price,
-          item.available,
-        ]);
-      } else {
-        setProducts([]);
-        setFilteredProducts([]); // Initialize filteredProducts with an empty array
-        setProductsNotFound(true);
-      }
+      setProductsNotFound(apiData.length === 0);
     } catch (error) {
-      // Handle errors
+      setLoading(false);
       if (axios.isCancel(error)) {
-        console.log("Request canceled:", error.message); // Handle canceled request
+        console.log("Request canceled:", error.message);
       } else if (error.code === "ECONNABORTED") {
-        console.log("Request timeout:", error.message); // Handle timeout
-        setLoading(false);
-        //navigation.goBack();
+        console.log("Request timeout:", error.message);
         setTimeModalVisible(true);
       } else {
         console.error("Error fetching data:", error.message);
@@ -178,98 +117,47 @@ const Manufacturer = ({ route, navigation }) => {
     }
   };
 
-  // ... existing code ...
+  const hideKeyboard = () =>{
+    Keyboard.dismiss();
+  }
 
   const onRefresh = async () => {
     setIsRefreshing(true);
-    try {
-      await fetchData(); // Fetch the updated data
-    } catch (error) {
-      console.log(error);
-    }
+    await fetchData();
     setIsRefreshing(false);
   };
 
-  const handleActionPress = ({ tableData }) => {
-    console.log("rowData:", selected); // Log the entire rowData to inspect its structure
-
-    Alert.alert("Selected Item", selected[1]);
-  };
-
-  //Apply filters when any filter criteria change
   useEffect(() => {
-    applyFilters();
-  }, [priceFilter, categoryFilter, isDollar]);
+    applyFilter();
+  }, [searchFilter, isDollar]);
 
-  // Apply filters function
-  const applyFilters = () => {
-    // Filter by price
-    const priceFiltered = priceFilter
-      ? products.filter((product) => {
-          const price = isDollar
-            ? product.price / supplierExRate
-            : product.price;
-          return price >= priceFilter * 0.9 && price <= priceFilter * 1.1;
-        })
-      : products;
+  const applyFilter = () => {
+    const filtered = products.filter((product) =>
+      product.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      product.sku.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      product.brand.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      (isDollar
+        ? (product.price / supplierExRate).toFixed(2)
+        : product.price.toFixed(2)
+      ).includes(searchFilter)
+    );
 
-    // Filter by name
-    const nameFiltered = categoryFilter
-      ? priceFiltered.filter(
-          (product) =>
-            product.name &&
-            product.name.toLowerCase().includes(categoryFilter.toLowerCase())
-        )
-      : priceFiltered;
-
-    // Filter by brand
-    const brandFiltered = brandFilter
-      ? nameFiltered.filter(
-          (product) =>
-            product.brand &&
-            product.brand.toLowerCase().includes(brandFilter.toLowerCase())
-        )
-      : nameFiltered;
-
-    // Filter by part number
-    const partNumberFiltered = partNumberFilter
-      ? brandFiltered.filter(
-          (product) =>
-            product.sku &&
-            product.sku
-              .toLowerCase()
-              .includes(partNumberFilter.toLowerCase())
-        )
-      : brandFiltered;
-
-    setFilteredProducts(partNumberFiltered);
-
-    if (partNumberFiltered.length === 0) {
-      // Handle the case when no products match the filters
-      setProductsNotFound(true);
-    } else {
-      setProductsNotFound(false);
-    }
+    setFilteredProducts(filtered);
+    setProductsNotFound(filtered.length === 0);
   };
 
-  // Function to clear filters
-  const clearFilters = () => {
-    setPriceFilter(""); // Clear price filter
-    setNameFilter(""); // Clear name filter
-    setBrandFilter("");
-    setPartNumberFilter("");
-    setCategoryFilter("");
-    setFilteredProducts(products); // Reset filteredProducts to all products
+  const clearFilter = () => {
+    setSearchFilter("");
+    setFilteredProducts(products);
   };
 
   const renderProductTable = () => {
-    const tableData = products.map((item) => [
+    const tableData = filteredProducts.map((item) => [
       item.name,
       item.sku,
       isDollar
-        ? `$ ${Number(
-            (item.price / supplierExRate).toFixed(2)
-          ).toLocaleString("en-US", {
+        ? `$ ${Number((item.price / supplierExRate).toFixed(2)).toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}`
@@ -279,13 +167,13 @@ const Manufacturer = ({ route, navigation }) => {
           className="bg-orange-500 w-16 rounded-2xl h-8 justify-center items-center"
           onPress={() => {
             setSelected([
-              item.firstName,
-              item.lastName,
+              item.name,
+              item.sku,
+              item.price,
               item.brand,
               item.category,
               item.phoneNumber,
               item.exchangeRate,
-              item.price,
             ]);
             setModalVisible(true);
           }}
@@ -319,16 +207,22 @@ const Manufacturer = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white" onPress={hideKeyboard}>
       <Appbar.Header>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
         <Appbar.Content title="Supplier Products" />
         <Appbar.Action icon="magnify" onPress={() => {}} />
       </Appbar.Header>
       <View className="w-full px-5 pt-4">
-        <Text className="text-slate-500 font-semibold text-xl">Supplier:{supplierFullName}</Text>
-        <Text className="text-slate-500 font-semibold text-xl">Contact:{supplierPhone}</Text>
-        <Text className="text-slate-500 font-semibold text-xl">Exchange Rate:{supplierExRate}</Text>
+        <Text className="text-slate-500 font-semibold text-xl">
+          Supplier: {supplierFullName}
+        </Text>
+        <Text className="text-slate-500 font-semibold text-xl">
+          Contact: {supplierPhone}
+        </Text>
+        <Text className="text-slate-500 font-semibold text-xl">
+          Exchange Rate: {supplierExRate}
+        </Text>
       </View>
       <View className="flex-row justify-between items-center px-5 py-5">
         <View>
@@ -349,131 +243,115 @@ const Manufacturer = ({ route, navigation }) => {
                 textDecorationLine: isDollar ? "line-through" : "none",
                 color: isDollar ? "gray" : "black",
               }}
+              className="font-bold px-2"
             >
-              {" "}
               KES
             </Text>
           </Text>
         </View>
-
-        <View>
-          <Switch
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={isDollar ? "#f4f3f4" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={() => setIsDollar((prevState) => !prevState)}
-            value={isDollar}
-          />
-        </View>
+        <Switch
+          trackColor={{ false: "#767577", true: "#f97316" }}
+          thumbColor={isDollar ? "#f97316" : "#f4f3f4"}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={() => setIsDollar((previousState) => !previousState)}
+          value={isDollar}
+        />
       </View>
-
+      <View className="px-4 pb-4 flex-row justify-between items-center">
+        <TextInput
+          className="bg-gray-100 rounded p-3 mb-3 w-80"
+          placeholder="Search"
+          value={searchFilter}
+          onChangeText={setSearchFilter}
+        />
+        <TouchableOpacity
+          className="bg-orange-500 rounded p-3 mb-3 w-10 h-10 justify-center items-center flex"
+          onPress={clearFilter}
+        >
+          <Text className="text-white text-center"><Icon.X size={15} color="white"/></Text>
+        </TouchableOpacity>
+      </View>
       <ScrollView
-        horizontal={true}
-        contentContainerStyle={{ paddingHorizontal: 15 }}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+        }
       >
-        <ScrollView
-          vertical={true}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-          }
-        >
-          {loading ? <Loading /> : <View>{renderProductTable()}</View>}
-        </ScrollView>
-      </ScrollView>
-
-      {/* <Modal animationType="slide" transparent={true} visible={modalVisible} className="justify-center items-center mt-12">
-
-      </Modal> */}
-
-      <Modal
-        isVisible={modalVisible}
-        onBackdropPress={() => setModalVisible(false)}
-        style={styles.modalContainer}
-      >
-        <View
-          className=""
-          style={[styles.bottomSheetContainer1, { height: windowHeight * 0.8 }]}
-        >
-          <View>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              className="bg-slate-400 justify-center items-center rounded-2xl h-12 w-12"
-            >
-              <Icon.XCircle size={30} color={"orange"} />
-            </TouchableOpacity>
-          </View>
-          <View className="justify-center items-center">
-            <Text className="text-slate-800 text-2xl font-semibold">
-              Product Details
+        {loading ? (
+          <Loading />
+        ) : productsNotFound ? (
+          <View className="flex-1 justify-center items-center pt-12">
+            <Icon.AlertCircle color="red" width={60} height={60} />
+            <Text className="text-slate-500 font-semibold text-2xl pt-4">
+              No Products Found
             </Text>
           </View>
-          <ScrollView vertical={true}>
-            <View className="justify-center">
-              <Text className="text-3xl font-bold text-slate-500 space-x-4 py-3">
-                {selected[1]}
-              </Text>
-
-              <Text
-                style={{ fontSize: 24, fontWeight: "bold" }}
-                className="text-xl text-bold"
-              >
-                {isDollar
-                  ? "$ " + Number(selected[6] / selected[5]).toFixed(2)
-                  : "KES " + selected[6]}
-              </Text>
-              <Text className="text-xl text-slate-600 font-semibold">
-                Manufacturer:{selected[0]}
-              </Text>
-              <Text className="text-xl text-slate-600 font-semibold">
-                Brand:{selected[2]}
-              </Text>
-              <Text className="text-xl text-slate-600 font-semibold">
-                SubCategory:{selected[3]}
-              </Text>
-              <Text className="text-xl text-slate-600 font-semibold">
-                ExchangeRate:{selected[5]}
-              </Text>
-            </View>
-            <View className="py-2">
-              <TouchableOpacity
-                onPress={handleWhatsapp}
-                className="rounded-2xl flex-row bg-green-500 p-2 w-90 h-12 justify-center items-center"
-              >
-                <Icon.MessageCircle size={23} color={"white"} />
-                <Text className="text-2xl font-semibold text-slate-700">
-                  Chat
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View className="py-2">
-              <TouchableOpacity
-                onPress={handleCall}
-                className="rounded-2xl flex-row p-2 bg-black w-90 h-12 justify-center items-center"
-              >
-                <Icon.Phone size={23} color={"white"} />
-                <Text className="text-2xl font-semibold text-slate-200">
-                  Call
-                </Text>
-              </TouchableOpacity>
-            </View>
+        ) : (
+          <ScrollView
+            horizontal={true}
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            }
+          >
+            {renderProductTable()}
           </ScrollView>
+        )}
+      </ScrollView>
+
+      <Modal isVisible={modalVisible}>
+        <View className="bg-white p-6 rounded-md">
+          <Text className="text-lg font-semibold mb-4">Product Details</Text>
+          <Text className="text-sm mb-1">Name: {selected[0]}</Text>
+          <Text className="text-sm mb-1">Part No: {selected[1]}</Text>
+          <Text className="text-sm mb-1">
+            Price:{" "}
+            {isDollar
+              ? `$ ${Number((selected[2] / supplierExRate).toFixed(2)).toLocaleString(
+                  "en-US",
+                  {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }
+                )}`
+              : `KES ${Number(selected[2]).toLocaleString("en-US")}`}
+          </Text>
+          <Text className="text-sm mb-1">Brand: {selected[3]}</Text>
+          <Text className="text-sm mb-1">Category: {selected[4]}</Text>
+          <Text className="text-sm mb-1">Phone: {supplierPhone}</Text>
+          <View className="flex-row justify-between mt-4">
+            <TouchableOpacity
+              className="bg-orange-500 rounded p-3 mb-3 w-1/2 mr-2"
+              onPress={handleCall}
+            >
+              <Text className="text-white text-center">Call Supplier</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="bg-green-500 rounded p-3 mb-3 w-1/2"
+              onPress={handleWhatsapp}
+            >
+              <Text className="text-white text-center">WhatsApp</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            className="bg-gray-300 rounded p-3 mb-3 w-full"
+            onPress={closeModal}
+          >
+            <Text className="text-center">Close</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
 
-      {/* display modal when data is not fetched on time */}
-      <Modal
-        isVisible={timeModalVisible}
-        onBackdropPress={() => setTimeModalVisible(false)}
-        style={styles.modalContainer}
-      >
-        <View
-          className=""
-          style={[styles.bottomSheetContainer1, { height: windowHeight * 0.5 }]}
-        >
-          <View className="justify-center items-center flex-1">
-            <ActivityIndicator size="large" color="red" />
-            <Text className="text-slate-500 py-4">Connection Timeout!!</Text>
-          </View>
+      <Modal isVisible={timeModalVisible}>
+        <View className="bg-white p-6 rounded-md">
+          <Text className="text-lg font-semibold mb-4">Error</Text>
+          <Text className="text-sm mb-1">
+            There was an error fetching data. Please try again later.
+          </Text>
+          <TouchableOpacity
+            className="bg-gray-300 rounded p-3 mb-3 w-full"
+            onPress={() => setTimeModalVisible(false)}
+          >
+            <Text className="text-center">Close</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </SafeAreaView>
@@ -481,29 +359,19 @@ const Manufacturer = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 30, backgroundColor: "#fff" },
-  head: { height: 20, backgroundColor: "#f1f8ff", minWidth: 300 },
+  head: { height: 50, backgroundColor: "#f97316" },
   wrapper: { flexDirection: "row" },
-  row: { height: 70 },
-  text: { textAlign: "center" },
-  bottomSheetContainer1: {
-    backgroundColor: "white",
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000000",
-    shadowOpacity: 0.5,
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowRadius: 5,
-    elevation: 5,
+  row: { height: 60, backgroundColor: "#FFF" },
+  text: { textAlign: "center", fontWeight: "bold", color: "#000" },
+  viewDetailsButton: {
+    backgroundColor: "#f97316",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
-  modalContainer: {
-    justifyContent: "flex-end",
-    margin: 0,
-    height: "50%",
+  viewDetailsButtonText: {
+    color: "white",
+    fontSize: 12,
   },
 });
 

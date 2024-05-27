@@ -11,9 +11,6 @@ import {
   TouchableOpacity,
   Text,
   Dimensions,
-  KeyboardAvoidingView,
-  Platform,
-  Linking,
   TextInput,
 } from "react-native";
 import { Table, TableWrapper, Row, Rows } from "react-native-table-component";
@@ -46,25 +43,17 @@ const CategoryViewScreen = ({ route, navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [timeModalVisible, setTimeModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedProductDescription, setSelectedProductDescription] = useState(
-    []
-  );
   const [filterModal, setFilterModal] = useState(false);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { isDollar, setIsDollar } = useCurrency();
 
   const [priceFilter, setPriceFilter] = useState("");
-  const [nameFilter, setNameFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
 
-  const [value, setValue] = useState(null);
-  const [isFocusCat, setIsFocusCat] = useState(false);
-  const [isFocusPrice, setIsFocusPrice] = useState(false);
-  const [selectedPriceRange, setSelectedPriceRange] = useState("");
-  // Inside your component...
-  const [partNumberFilter, setPartNumberFilter] = useState(""); // Add this state variable
+  const [searchQuery, setSearchQuery] = useState("");
+  const [partNumberFilter, setPartNumberFilter] = useState("");
 
   const closeModal = () => {
     setModalVisible(false);
@@ -73,29 +62,24 @@ const CategoryViewScreen = ({ route, navigation }) => {
     setTimeModalVisible(true);
   };
 
-  //handle refresh
   const onRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await fetchData(); // Fetch the updated data
+      await fetchData();
     } catch (error) {
       console.log(error);
     }
     setIsRefreshing(false);
   };
 
-  //HANDLE PHONE CALL
   const handleCall = () => {
-    const phoneNumber = selected[4];
+    const phoneNumber = selected[4].slice(-9);
     const countryCode = "+254";
 
-    // Check if the phone number is valid
     if (phoneNumber) {
       const fullPhoneNumber = `${phoneNumber}`;
-      // Construct the phone call URL
       const phoneURL = `tel:${fullPhoneNumber}`;
 
-      // Open the phone app with the specified phone number
       Linking.canOpenURL(phoneURL)
         .then((supported) => {
           if (!supported) {
@@ -110,17 +94,13 @@ const CategoryViewScreen = ({ route, navigation }) => {
     }
   };
 
-  //handle whatsapp
   const handleWhatsapp = () => {
-    const phoneNumber = selected[4];
+    const phoneNumber = selected[4].slice(-9);
     const countryCode = "+254";
     if (phoneNumber) {
       const fullPhoneNumber = `${phoneNumber}`;
-      const phoneURL = `tel:${fullPhoneNumber}`;
-      // Construct the WhatsApp chat URL
       const whatsappURL = `https://wa.me/${fullPhoneNumber}`;
 
-      // Open the WhatsApp chat with the specified phone number
       Linking.canOpenURL(whatsappURL)
         .then((supported) => {
           if (!supported) {
@@ -141,95 +121,66 @@ const CategoryViewScreen = ({ route, navigation }) => {
     fetchData();
   }, [categoryName]);
 
-  //fetch supplier data from products
   const getSupplierDataForEachItem = async (item) => {
     try {
       const response = await axios.get(
         `https://res-server-sigma.vercel.app/api/shop/usersdata/${item.supplier}`
       );
       const apiData = response.data;
-      const exchangeRate = apiData.user.dollarExchangeRate; // Adjust based on actual response structure
-      const firstName = apiData.user.firstName; // Extract the supplier's first name
-      const lastName = apiData.user.lastName; // Extract the supplier's first name
-    const phoneNumber = apiData.user.phoneNumber; // Extract the supplier's phone number
-    const categories = apiData.user.categories.join(', '); // Extract the supplier's phone number
-    return {...item, exchangeRate, firstName, phoneNumber,categories,lastName}; // Return a new object with the exchange rate
+      const exchangeRate = apiData.user.dollarExchangeRate;
+      const firstName = apiData.user.firstName;
+      const lastName = apiData.user.lastName;
+      const phoneNumber = apiData.user.phoneNumber;
+      const categories = apiData.user.categories.join(", ");
+      return {
+        ...item,
+        exchangeRate,
+        firstName,
+        phoneNumber,
+        categories,
+        lastName,
+      };
     } catch (error) {
       console.error("Error fetching exchange rate:", error);
-      return item; // Return the original item if there's an error
+      return item;
     }
   };
 
-  //   const fetchData = async () => {
-  //     setLoading(true);
-  //     try {
-  //       const response = await axios.get(
-  //         `https://res-server-sigma.vercel.app/api/product/productlistcategory/${categoryName}`,
-  //         {
-  //           timeout: 10000,
-  //         }
-  //       );
-  //       const apiData = response.data;
-  //       setFilteredProducts(apiData);
-  //       setProducts(apiData); // Update the products state
-  //       setLoading(false);
-
-  //       if (apiData.length > 0) {
-  //         setTableHead(["Name", "PartNo.", "Supplier", "Price", "Action"]);
-
-  //         const rows = apiData.map((item, index) => [
-  //           item.name,
-  //           item.sku,
-  //           item.supplier,
-  //           item.price,
-  //           item.available,
-  //         ]);
-  //       } else {
-  //         setProducts([]);
-  //         setFilteredProducts([]); // Initialize filteredProducts with an empty array
-  //         setProductsNotFound(true);
-  //       }
-  //     } catch (error) {
-  //       // Handle errors
-  //       if (axios.isCancel(error)) {
-  //         console.log("Request canceled:", error.message); // Handle canceled request
-  //       } else if (error.code === "ECONNABORTED") {
-  //         console.log("Request timeout:", error.message); // Handle timeout
-  //         navigation.goBack();
-  //         // setLoading(false);
-  //         //setTimeModalVisible(true)
-  //         //ConnectionOut()
-  //       } else {
-  //         console.error("Error fetching data:", error.message);
-  //       }
-  //     }
-  //   };
   const fetchData = async () => {
     setLoading(true);
     try {
-        const response = await axios.get(`https://res-server-sigma.vercel.app/api/product/productlistcategory/${categoryName}`);
-        const apiData = response.data;
-        const productsWithExchangeRates = await Promise.all(apiData.map(getSupplierDataForEachItem)); // Wait for all exchange rates to be fetched
-        setProducts(productsWithExchangeRates); // Set the products state with exchange rates
-        setLoading(false);
-    
-        if (productsWithExchangeRates.length > 0) {
-          setTableHead(["Name", "PartNo.", "Price", "Exchange Rate", "Action"]);
-          const rows = productsWithExchangeRates.map((item) => [
-            item.name,
-            item.sku,
-            isDollar? `$ ${Number(item.price / item.exchangeRate).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `KES ${Number(item.price).toLocaleString("en-US")}`,
-            item.exchangeRate,
-            item.available,
-          ]);
-          setTableData(rows); // Make sure to set tableData here if you're using it elsewhere
-        } else {
-          setProducts([]);
-          setFilteredProducts([]);
-          setProductsNotFound(true);
-        }
+      const response = await axios.get(
+        `https://res-server-sigma.vercel.app/api/product/productlistcategory/${categoryName}`
+      );
+      const apiData = response.data;
+      const productsWithExchangeRates = await Promise.all(
+        apiData.map(getSupplierDataForEachItem)
+      );
+      setProducts(productsWithExchangeRates);
+      setFilteredProducts(productsWithExchangeRates);
+      setLoading(false);
+
+      if (productsWithExchangeRates.length > 0) {
+        setTableHead(["Name", "PartNo.", "Price", "Exchange Rate", "Action"]);
+        const rows = productsWithExchangeRates.map((item) => [
+          item.name,
+          item.sku,
+          isDollar
+            ? `$ ${Number(item.price / item.exchangeRate).toLocaleString(
+                "en-US",
+                { minimumFractionDigits: 2, maximumFractionDigits: 2 }
+              )}`
+            : `KES ${Number(item.price).toLocaleString("en-US")}`,
+          item.exchangeRate,
+          item.available,
+        ]);
+        setTableData(rows);
+      } else {
+        setProducts([]);
+        setFilteredProducts([]);
+        setProductsNotFound(true);
+      }
     } catch (error) {
-      // Handle errors
       if (axios.isCancel(error)) {
         console.log("Request canceled:", error.message);
       } else if (error.code === "ECONNABORTED") {
@@ -241,83 +192,87 @@ const CategoryViewScreen = ({ route, navigation }) => {
     }
   };
 
-  const handleActionPress = ({ tableData }) => {
-    console.log("rowData:", selected); // Log the entire rowData to inspect its structure
-
+  const handleActionPress = () => {
+    console.log("rowData:", selected);
     Alert.alert("Selected Item", selected[1]);
   };
 
-  //Apply filters when any filter criteria change
   useEffect(() => {
     applyFilters();
-  }, [priceFilter, categoryFilter, isDollar]);
+  }, [priceFilter, categoryFilter, isDollar, searchQuery]);
 
-  // Apply filters function
   const applyFilters = () => {
     let filteredProducts = products;
-  
-    // Filter by search query
+
     if (searchQuery) {
-      filteredProducts = filteredProducts.filter(product =>
+      filteredProducts = filteredProducts.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-  
-    // Existing filters
+
     const priceFiltered = priceFilter
-     ? filteredProducts.filter(product => {
-          const price = isDollar? product.price / product.shop.exchangeRate : product.price;
-          return price >= priceFilter * 0.9 && price <= priceFilter * 1.1;
+      ? filteredProducts.filter((product) => {
+          const price = isDollar
+            ? product.price / product.shop.exchangeRate
+            : product.price;
+          return (
+            price >= priceFilter * 0.9 && price <= priceFilter * 1.1
+          );
         })
       : filteredProducts;
-  
+
     const nameFiltered = categoryFilter
-     ? priceFiltered.filter(product => product.name && product.name.toLowerCase().includes(categoryFilter.toLowerCase()))
+      ? priceFiltered.filter((product) =>
+          product.name &&
+          product.name.toLowerCase().includes(categoryFilter.toLowerCase())
+        )
       : priceFiltered;
-  
+
     const brandFiltered = brandFilter
-     ? nameFiltered.filter(product => product.brand && product.brand.toLowerCase().includes(brandFilter.toLowerCase()))
+      ? nameFiltered.filter((product) =>
+          product.brand &&
+          product.brand.toLowerCase().includes(brandFilter.toLowerCase())
+        )
       : nameFiltered;
-  
+
     const partNumberFiltered = partNumberFilter
-     ? brandFiltered.filter(product => product.sku && product.sku.toLowerCase().includes(partNumberFilter.toLowerCase()))
+      ? brandFiltered.filter((product) =>
+          product.sku &&
+          product.sku.toLowerCase().includes(partNumberFilter.toLowerCase())
+        )
       : brandFiltered;
-  
+
     setFilteredProducts(partNumberFiltered);
-  
+
     if (partNumberFiltered.length === 0) {
       setProductsNotFound(true);
     } else {
       setProductsNotFound(false);
     }
   };
-  
 
-  // Function to clear filters
   const clearFilters = () => {
-    setPriceFilter(""); // Clear price filter
-    setNameFilter(""); // Clear name filter
+    setPriceFilter("");
+    setCategoryFilter("");
     setBrandFilter("");
     setPartNumberFilter("");
-    setCategoryFilter("");
-    setFilteredProducts(products); // Reset filteredProducts to all products
+    setSearchQuery("");
+    setFilteredProducts(products);
   };
 
-  useEffect(() => {
-    applyFilters();
-  }, [priceFilter, categoryFilter, isDollar, searchQuery]); // Add searchQuery as a dependency
-  
-
   const renderProductTable = () => {
-    const tableData = products.map((item) => [
+    const tableData = filteredProducts.map((item) => [
       item.name,
       item.sku,
       isDollar
-        ? `$ ${Number(item.price / item.exchangeRate).toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`
+        ? `$ ${Number(item.price / item.exchangeRate).toLocaleString(
+            "en-US",
+            {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }
+          )}`
         : `KES ${Number(item.price).toLocaleString("en-US")}`,
       item.exchangeRate,
 
@@ -338,226 +293,168 @@ const CategoryViewScreen = ({ route, navigation }) => {
             ]);
             setModalVisible(true);
           }}
-          style={styles.viewDetailsButton}
         >
-          <Text style={styles.viewDetailsButtonText}>View</Text>
+          <Text className="text-white text-sm font-semibold">Action</Text>
         </TouchableOpacity>
       </View>,
     ]);
+    return tableData;
+  };
 
+  const renderEmptyProductsView = () => {
     return (
-      <Table borderStyle={{ borderWidth: 1 }}>
-        <Row
-          data={tableHead}
-          flexArr={[5, 4, 2, 2]}
-          widthArr={[160, 180, 200, 220]}
-          style={styles.head}
-          textStyle={styles.text}
-        />
-        <TableWrapper style={styles.wrapper}>
-          <Rows
-            data={tableData}
-            flexArr={[5, 4, 2, 2]}
-            widthArr={[160, 180, 200, 220]}
-            style={styles.row}
-            textStyle={styles.text}
-          />
-        </TableWrapper>
-      </Table>
+      <SafeAreaView className="flex-1 justify-center items-center">
+        <Text className="text-gray-500 text-lg">No products found</Text>
+      </SafeAreaView>
     );
   };
-  const [searchQuery, setSearchQuery] = useState('');
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <Appbar.Header>
-        <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title={categoryName} />
-        <Appbar.Action icon="magnify" onPress={() => {}} />
-      </Appbar.Header>
-      <View className="w-full px-5">
-      <TextInput
-  onChangeText={(query) => setSearchQuery(query)} // Capture the search query
-  className="h-10 w-full px-4 border border-slate-400 rounded-xl"
-  placeholder="Search by price, name, SKU..."
-/>
-
-      </View>
-      <View className="flex-row justify-between items-center px-5 py-5">
-        <View>
-          <Text className="text-xl text-slate-500 font-semibold flex-row justify-between item-center">
-            Currency:
-            <Text
-              className="font-bold px-2"
-              style={{
-                textDecorationLine: isDollar ? "none" : "line-through",
-                color: isDollar ? "black" : "gray",
-              }}
-            >
-              USD
-            </Text>{" "}
-            ||
-            <Text
-              style={{
-                textDecorationLine: isDollar ? "line-through" : "none",
-                color: isDollar ? "gray" : "black",
-              }}
-            >
-              {" "}
-              KES
-            </Text>
-          </Text>
-        </View>
-
-        <View>
-          <Switch
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={isDollar ? "#f4f3f4" : "#f4f3f4"}
-            ios_backgroundColor="#3e3e3e"
-            onValueChange={() => setIsDollar((prevState) => !prevState)}
-            value={isDollar}
+    <>
+      <SafeAreaView className="flex-1 bg-white">
+        <StatusBar style="dark" />
+        <Appbar.Header style={{ backgroundColor: "white" }}>
+          <Appbar.Action
+            icon="chevron-left"
+            onPress={() => {
+              navigation.goBack();
+            }}
           />
-        </View>
-      </View>
+          <Appbar.Content
+            title={categoryName}
+            titleStyle={{
+              fontSize: 20,
+              fontWeight: "bold",
+              color: "black",
+            }}
+          />
+        </Appbar.Header>
 
-      <ScrollView
-        horizontal={true}
-        contentContainerStyle={{ paddingHorizontal: 15 }}
-      >
         <ScrollView
-          vertical={true}
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
           }
         >
-          {loading ? <Loading /> : <View>{renderProductTable()}</View>}
+          <View style={{ padding: 16 }}>
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
+                <Text style={styles.clearButtonText}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+            <Table
+              borderStyle={{
+                borderWidth: 1,
+                borderColor: "#C8E1FF",
+              }}
+            >
+              <Row
+                data={tableHead}
+                style={styles.head}
+                textStyle={styles.text}
+              />
+              <TableWrapper>
+                {renderProductTable().map((rowData, index) => (
+                  <Row
+                    key={index}
+                    data={rowData}
+                    style={[
+                      styles.row,
+                      index % 2 && {
+                        backgroundColor: "#F7F6E7",
+                      },
+                    ]}
+                    textStyle={styles.text}
+                    onPress={() => setSelected(rowData)}
+                  />
+                ))}
+              </TableWrapper>
+            </Table>
+
+            {productsNotFound && renderEmptyProductsView()}
+          </View>
         </ScrollView>
-      </ScrollView>
-
-      {/* <Modal animationType="slide" transparent={true} visible={modalVisible} className="justify-center items-center mt-12">
-
-      </Modal> */}
+      </SafeAreaView>
 
       <Modal
         isVisible={modalVisible}
-        onBackdropPress={() => setModalVisible(false)}
-        style={styles.modalContainer}
+        onBackdropPress={closeModal}
+        backdropOpacity={0.5}
+        animationIn="zoomIn"
+        animationOut="zoomOut"
+        animationInTiming={500}
+        animationOutTiming={500}
       >
-        <View
-          className=""
-          style={[styles.bottomSheetContainer1, { height: windowHeight * 0.8 }]}
-        >
-          <View>
+        <View className="bg-white p-6 rounded-lg items-center justify-center">
+          <Text className="text-lg font-bold mb-4">Supplier Information</Text>
+          <Text>Name: {selected[0] || "N/A"}</Text>
+          <Text>Phone: {selected[4] || "N/A"}</Text>
+          <Text>Exchange Rate: {selected[5] || "N/A"}</Text>
+          <View className="mt-4 flex-row justify-around w-full">
             <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              className="bg-black justify-center items-center rounded-2xl h-12 w-12"
+              className="bg-green-500 px-4 py-2 rounded"
+              onPress={handleWhatsapp}
             >
-              <Icon.ChevronLeft size={30} color={"white"} />
+              <Text className="text-white">WhatsApp</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="bg-blue-500 px-4 py-2 rounded"
+              onPress={handleCall}
+            >
+              <Text className="text-white">Call</Text>
             </TouchableOpacity>
           </View>
-          <View className="justify-center items-center">
-            <Text className="text-slate-800 text-2xl font-semibold">
-              Product Details
-            </Text>
-          </View>
-          <ScrollView vertical={true}>
-            <View className="justify-center">
-              <Text className="text-3xl font-bold text-slate-500 space-x-4 py-3">
-                {selected[8]}
-              </Text>
-              {/* <Text className="text-2xl font-semibold">Ksh.{selected[6]}</Text> */}
-              <Text
-                style={{ fontSize: 24, fontWeight: "bold" }}
-                className="text-xl text-bold"
-              >
-                {isDollar
-                  ? "$ " + Number(selected[6] / selected[5]).toFixed(2)
-                  : "KES " + selected[6]}
-              </Text>
-
-              <Text className="text-xl text-slate-600 font-normal">
-                Supplier:{selected[0]+" "+selected[1]}
-              </Text>
-              <Text className="text-xl text-slate-600 font-normal">
-                Brand:{selected[2]}
-              </Text>
-              <Text className="text-xl text-slate-600 font-normal">
-                Categories:{selected[7]}
-              </Text>
-              <Text className="text-xl text-slate-600 font-normal">
-                ExchangeRate:{selected[5]}
-              </Text>
-            </View>
-            <View className="py-2">
-              <TouchableOpacity
-                onPress={handleWhatsapp}
-                className="rounded-2xl flex-row bg-green-500 p-2 w-90 h-12 justify-center items-center"
-              >
-                <Icon.MessageCircle size={23} color={"white"} />
-                <Text className="text-2xl font-semibold text-slate-700">
-                  Chat
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View className="py-2">
-              <TouchableOpacity
-                onPress={handleCall}
-                className="rounded-2xl flex-row p-2 bg-black w-90 h-12 justify-center items-center"
-              >
-                <Icon.Phone size={23} color={"white"} />
-                <Text className="text-2xl font-semibold text-slate-200">
-                  Call
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
+          <TouchableOpacity
+            className="mt-4 bg-red-500 px-4 py-2 rounded"
+            onPress={closeModal}
+          >
+            <Text className="text-white">Close</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
-
-      {/* display modal when data is not fetched on time */}
-      <Modal
-        isVisible={timeModalVisible}
-        onBackdropPress={() => setTimeModalVisible(false)}
-        style={styles.modalContainer}
-      >
-        <View
-          className=""
-          style={[styles.bottomSheetContainer1, { height: windowHeight * 0.5 }]}
-        >
-          <View className="justify-center items-center flex-1">
-            <ActivityIndicator size="large" color="red" />
-            <Text className="text-slate-500 py-4">Connection Timeout!!</Text>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, paddingTop: 30, backgroundColor: "#fff" },
-  head: { height: 20, backgroundColor: "#f1f8ff", minWidth: 300 },
-  wrapper: { flexDirection: "row" },
-  row: { height: 70 },
-  text: { textAlign: "center" },
-  bottomSheetContainer1: {
-    backgroundColor: "white",
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000000",
-    shadowOpacity: 0.5,
-    shadowOffset: {
-      width: 0,
-      height: -2,
-    },
-    shadowRadius: 5,
-    elevation: 5,
+  head: {
+    height: 40,
+    backgroundColor: "#f1f8ff",
   },
-  modalContainer: {
-    justifyContent: "flex-end",
-    margin: 0,
-    height: "50%",
+  text: {
+    margin: 6,
+    textAlign: "center",
+  },
+  row: {
+    flexDirection: "row",
+    backgroundColor: "#FFF1C1",
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#C8E1FF",
+    padding: 8,
+    borderRadius: 4,
+  },
+  clearButton: {
+    marginLeft: 8,
+    backgroundColor: "#FF6F61",
+    padding: 8,
+    borderRadius: 4,
+  },
+  clearButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "bold",
   },
 });
 
