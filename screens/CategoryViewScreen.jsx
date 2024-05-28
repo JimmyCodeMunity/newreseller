@@ -12,6 +12,7 @@ import {
   Text,
   Dimensions,
   TextInput,
+  Linking
 } from "react-native";
 import { Table, TableWrapper, Row, Rows } from "react-native-table-component";
 import axios from "axios";
@@ -77,7 +78,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
     const countryCode = "+254";
 
     if (phoneNumber) {
-      const fullPhoneNumber = `${phoneNumber}`;
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
       const phoneURL = `tel:${fullPhoneNumber}`;
 
       Linking.canOpenURL(phoneURL)
@@ -98,7 +99,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
     const phoneNumber = selected[4].slice(-9);
     const countryCode = "+254";
     if (phoneNumber) {
-      const fullPhoneNumber = `${phoneNumber}`;
+      const fullPhoneNumber = `${countryCode}${phoneNumber}`;
       const whatsappURL = `https://wa.me/${fullPhoneNumber}`;
 
       Linking.canOpenURL(whatsappURL)
@@ -290,6 +291,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
               item.price,
               item.categories,
               item.name,
+              item.sku
             ]);
             setModalVisible(true);
           }}
@@ -329,6 +331,39 @@ const CategoryViewScreen = ({ route, navigation }) => {
             }}
           />
         </Appbar.Header>
+        <View className="flex-row justify-between items-center px-5 py-5">
+        <View>
+          <Text className="text-xl text-slate-500 font-semibold flex-row justify-between item-center">
+            Currency:
+            <Text
+              className="font-bold px-2"
+              style={{
+                textDecorationLine: isDollar ? "none" : "line-through",
+                color: isDollar ? "black" : "gray",
+              }}
+            >
+              USD
+            </Text>{" "}
+            ||
+            <Text
+              style={{
+                textDecorationLine: isDollar ? "line-through" : "none",
+                color: isDollar ? "gray" : "black",
+              }}
+              className="font-bold px-2"
+            >
+              KES
+            </Text>
+          </Text>
+        </View>
+        <Switch
+          trackColor={{ false: "#767577", true: "#f97316" }}
+          thumbColor={isDollar ? "#f97316" : "#f4f3f4"}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={() => setIsDollar((previousState) => !previousState)}
+          value={isDollar}
+        />
+      </View>
 
         <ScrollView
           refreshControl={

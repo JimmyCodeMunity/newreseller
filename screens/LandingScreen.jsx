@@ -10,6 +10,7 @@ import {
   ImageBackground,
   Dimensions,
   Modal,
+  Pressable,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import * as Icon from "react-native-feather";
@@ -17,6 +18,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // import Deals from "../components/Deals";
 
 import axios from "axios";
+import { getEvents } from "../api";
+import { urlFor } from "../sanity";
 
 const height = Dimensions.get("window").height;
 const width = Dimensions.get("window").width;
@@ -75,6 +78,29 @@ const LandingScreen = ({ navigation }) => {
     }
   };
 
+  //get events
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const eventData = await getEvents();
+        setEvents(eventData);
+        // console.log("the event", eventData);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  const dealsData = events.map((event) => ({
+    title: event.title, // Add title to data for rendering in the carousel
+    imageUri: urlFor(event.mainImage).url(),
+    link: event.shop,
+  }));
+
   //get userinformation
   const getUserInfo = async () => {
     setLoading(true);
@@ -118,10 +144,13 @@ const LandingScreen = ({ navigation }) => {
     <SafeAreaView className="flex-1">
       {loading ? (
         <View className="flex-1 justify-center items-center">
-            <Image source={require('../assets/images/resellersplash.png')}
+          <Image
+            source={require("../assets/images/resellersplash.png")}
             className="h-16 w-16"
-            />
-          <Text className="text-xl font-semibold tracking-wide">Collecting data....</Text>
+          />
+          <Text className="text-xl font-semibold tracking-wide">
+            Collecting data....
+          </Text>
         </View>
       ) : (
         <View className="flex-1">
@@ -132,7 +161,7 @@ const LandingScreen = ({ navigation }) => {
               </Text>
             </View>
             <TouchableOpacity
-              onPress={() => navigation.navigate("Profile")}
+              onPress={() => navigation.navigate("Settings")}
               className="border border-orange-500 border-xl rounded-full p-2"
             >
               <Image
@@ -142,44 +171,52 @@ const LandingScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          <View className="py-4 justify-between items-center w-full px-5 flex-row">
-            <TextInput
-              className="border border-slate-300 rounded-xl w-80 h-10 px-4"
-              placeholder="search products,resellers,brands...."
-            />
-            <TouchableOpacity
-              onPress={showModal}
-              className="h-10 w-10 bg-black rounded-xl justify-center items-center "
-            >
-              <Icon.Search color="white" size={12} />
-            </TouchableOpacity>
-          </View>
+          
           <ScrollView vertical={true}>
             <View className="justify-center items-center px-5 py-5">
-              <View className="w-full bg-black h-40 rounded-2xl"></View>
+              <ScrollView
+                horizontal={true}
+                className="space-x-10"
+                showsHorizontalScrollIndicator={false}
+              >
+                {events.map((event) => {
+                  const { title, imageUri, link } = event;
+                  return (
+                    <View className="w-80 bg-black h-40 rounded-2xl">
+                      <Image
+                        className="h-full w-full overflow-hidden rounded-2xl"
+                        source={{ uri: urlFor(event.mainImage).url() }}
+                      />
+                    </View>
+                  );
+                })}
+              </ScrollView>
             </View>
 
             <View className="px-5 flex-row justify-between items-center my-4">
               <Text className="text-slate-600 font-semibold text-xl">
                 Our Suppliers
               </Text>
+              <Pressable onPress={()=>navigation.navigate('manufacturers')}>
               <Text className="text-slate-600 text-orange-400">View more</Text>
+              </Pressable>
             </View>
 
             <View className="flex-1 justify-between items-center flex-row px-5">
-              {suppliers.slice(0,4).map((supplier) => {
+              {suppliers.slice(0, 4).map((supplier) => {
                 return (
                   <TouchableOpacity
-                    onPress={()=>navigation.navigate('SupplierView',{
-                        supplierId:supplier._id,
-                        supplierFirstName:supplier.firstName,
-                        supplierLastName:supplier.lastName,
-                        supplierEmail:supplier.email,
-                        supplierPhone:supplier.phoneNumber,
-                        supplierExRate:supplier.dollarExchangeRate,
-                        supplierAddress:supplier.address,
-  
-                    })}
+                    onPress={() =>
+                      navigation.navigate("SupplierView", {
+                        supplierId: supplier._id,
+                        supplierFirstName: supplier.firstName,
+                        supplierLastName: supplier.lastName,
+                        supplierEmail: supplier.email,
+                        supplierPhone: supplier.phoneNumber,
+                        supplierExRate: supplier.dollarExchangeRate,
+                        supplierAddress: supplier.address,
+                      })
+                    }
                     className="justify-center items-center bg-slate-300 rounded-full h-20 w-20 p-3"
                   >
                     <Image
@@ -196,14 +233,18 @@ const LandingScreen = ({ navigation }) => {
               <Text className="text-slate-600 font-semibold text-xl">
                 Product Categories
               </Text>
-              <Text className="text-slate-600 text-orange-400">View all</Text>
+              
             </View>
 
-            <View className="w-full flex-row px-5 justify-between items-center">
-              {categories.slice(0, 4).map((category) => {
+            <View className="w-full flex-row flex-wrap px-5 justify-between items-start">
+              {categories.map((category) => {
                 return (
                   <TouchableOpacity
-                    onPress={()=>navigation.navigate("CategoryView",{categoryName:category.name})}
+                    onPress={() =>
+                      navigation.navigate("CategoryView", {
+                        categoryName: category.name,
+                      })
+                    }
                     className="justify-center items-center rounded-2xl h-20 w-20 p-3"
                   >
                     <Image
@@ -220,7 +261,7 @@ const LandingScreen = ({ navigation }) => {
               <Text className="text-slate-600 font-semibold text-xl">
                 Ads & Discounts
               </Text>
-              <Text className="text-slate-600 text-orange-400">View all</Text>
+              
             </View>
 
             <ScrollView
@@ -233,7 +274,7 @@ const LandingScreen = ({ navigation }) => {
                 return (
                   <View className="h-60 w-80">
                     <TouchableOpacity
-                      onPress={showModal}
+                      
                       className="py-10 px-5"
                     >
                       <ImageBackground
@@ -255,7 +296,11 @@ const LandingScreen = ({ navigation }) => {
                           </Text>
                         </View>
                         <View>
-                          <TouchableOpacity className="bg-white h-12 w-12 rounded-full justify-center items-center">
+                          <TouchableOpacity onPress={()=>navigation.navigate('eventdata',{
+                          itemName:ad.title,
+                          supplier:ad.supplier,
+                          itemDescription:ad.description,}
+                          )} className="bg-white h-12 w-12 rounded-full justify-center items-center">
                             <Icon.ChevronRight size={14} color="oran˝ge" />
                           </TouchableOpacity>
                         </View>

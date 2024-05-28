@@ -28,10 +28,12 @@ import { useCurrency } from "../components/CurrrencyProvider";
 const windowHeight = Dimensions.get("window").height;
 const windowWidth = Dimensions.get("window").width;
 
-const SearchScreen = ({ navigation }) => {
+const CategoryScreen = ({ navigation,route }) => {
+  const {categoryImage,categoryName} = route.params;
   const [tableHead, setTableHead] = useState([
+    
     "Name",
-    "SKU.",
+    "sku.",
     "Price",
     "Action",
   ]);
@@ -49,7 +51,7 @@ const SearchScreen = ({ navigation }) => {
   const [filterBrand, setFilterBrand] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [products, setProducts] = useState([]);
-  const [usdPrice, setUsdPrice] = useState("");
+  const [usdPrice,setUsdPrice] = useState("")
 
   const closeModal = () => {
     setModalVisible(false);
@@ -65,6 +67,11 @@ const SearchScreen = ({ navigation }) => {
     setShowSearch(!showSearch);
   };
 
+
+
+
+
+
   //handle refresh
   const onRefresh = async () => {
     setIsRefreshing(true);
@@ -75,6 +82,7 @@ const SearchScreen = ({ navigation }) => {
     }
     setIsRefreshing(false);
   };
+
 
   useEffect(() => {
     fetchData();
@@ -109,12 +117,12 @@ const SearchScreen = ({ navigation }) => {
   //   }
   // };
 
-  const [newdollar, setNewDollar] = useState();
+  const [newdollar,setNewDollar] = useState()
   const fetchData = async () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://res-server-sigma.vercel.app/api/product/productlist"
+        `https://res-server-sigma.vercel.app/api/product/productlistcategory/${categoryName}`
       );
       const apiData = response.data;
       setFilteredProducts(apiData);
@@ -128,43 +136,40 @@ const SearchScreen = ({ navigation }) => {
           apiData.map(async (item, index) => {
             try {
               // Fetch supplier details for each product
-              const supplierResponse = await axios.get(
-                `https://res-server-sigma.vercel.app/api/shop/usersdata/${item.supplier}`
-              );
+              const supplierResponse = await axios.get(`https://res-server-sigma.vercel.app/api/shop/usersdata/${item.supplier}`);
               const supplierData = supplierResponse.data.user;
               const { firstName, lastName, dollarExchangeRate } = supplierData;
-              setNewDollar(dollarExchangeRate);
+              setNewDollar(dollarExchangeRate)
               // console.log(`Supplier for ${item.name}: ${firstName} ${lastName}, Exchange: ${dollarExchangeRate} Price:${item.price}`);
 
               // Calculate price in USD
-
+              
+              
               return [
                 item.name,
                 `${firstName} ${lastName}`,
                 isDollar
                   ? `$ ${Number(priceInUSD).toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}`
                   : `KES ${Number(item.price).toLocaleString("en-US")}`,
                 item.isAvailable ? "Available" : "Unavailable",
                 <TouchableOpacity
-                  onPress={() =>
-                    navigation.navigate("viewproduct", {
-                      name: item.name,
-                      brand: item.brand,
-                      category: item.category,
-                      price: isDollar ? usdPrice : item.price,
-                      supplier: `${firstName} ${lastName}`,
-                      desc: item.description,
-                      categ: item.category,
-                      status: item.status,
-                    })
-                  }
+                  onPress={() => navigation.navigate('viewproduct', {
+                    name: item.name,
+                    brand: item.brand,
+                    category: item.category,
+                    price: isDollar ? usdPrice : item.price,
+                    supplier: `${firstName} ${lastName}`,
+                    desc: item.description,
+                    categ: item.category,
+                    status: item.status,
+                  })}
                   style={styles.viewDetailsButton}
                 >
                   <Text style={styles.viewDetailsButtonText}>View</Text>
-                </TouchableOpacity>,
+                </TouchableOpacity>
               ];
             } catch (error) {
               console.error("Error fetching supplier details:", error.message);
@@ -173,12 +178,13 @@ const SearchScreen = ({ navigation }) => {
           })
         );
 
-        setTableData(rows.filter((row) => row.length > 0));
+        setTableData(rows.filter(row => row.length > 0));
       }
     } catch (error) {
       console.error("Error fetching data:", error.message);
     }
   };
+
 
   const handleActionPress = ({ tableData }) => {
     console.log("rowData:", selected); // Log the entire rowData to inspect its structure
@@ -218,6 +224,7 @@ const SearchScreen = ({ navigation }) => {
       // Calculate price in KES
       const priceInKES = item.price;
 
+      
       // console.log("dollars",newdollar)
 
       return [
@@ -225,9 +232,9 @@ const SearchScreen = ({ navigation }) => {
         item.sku,
         isDollar
           ? `$ ${Number(priceInUSD.toFixed(2)).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`
           : `KES ${Number(priceInKES.toFixed(2)).toLocaleString("en-US")}`,
         item.isAvailable ? (
           <Text className="text-center items-center">Available</Text>
@@ -239,7 +246,7 @@ const SearchScreen = ({ navigation }) => {
           <TouchableOpacity
             className="bg-orange-500 w-16 rounded-2xl h-8 justify-center items-center"
             onPress={() => {
-              navigation.navigate("viewproduct", {
+              navigation.navigate('viewproduct', {
                 name: item.name,
                 brand: item.brand,
                 category: item.category,
@@ -248,8 +255,8 @@ const SearchScreen = ({ navigation }) => {
                 desc: item.description,
                 categ: item.category,
                 status: item.status,
-                dollarstate: isDollar,
-              });
+                dollarstate:isDollar
+              })
             }}
             style={styles.viewDetailsButton}
           >
@@ -282,25 +289,26 @@ const SearchScreen = ({ navigation }) => {
     );
   };
 
+
+
   return (
     <SafeAreaView className="flex-1" style={styles.container}>
-      <View className="mt-8 py-3 px-4 flex-row justify-between items-center">
-        <View>
-          <Text className="text-orange-500 text-2xl font-bold">Search</Text>
+      <View
+        className="justify-center items-center absolute w-full h-32"
+        style={{ bottom: 10, zIndex: 20 }}
+      >
+        <View className="w-60 justify-center items-center my-5">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="py-5 bg-orange-400 rounded-2xl w-full justify-center items-center"
+          >
+            {/* <Icon.X size={20} color="white" /> */}
+            <Text className="text-white font-bold text-xl tracking-wide">
+              Close
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
-      <View className="py-4 justify-between items-center w-full px-5 flex-row">
-        <TextInput
-          value={searchQuery}
-          onChangeText={(text) => setSearchQuery(text)}
-          className="border border-slate-300 rounded-xl w-80 h-10 px-4"
-          placeholder="search products,resellers,brands...."
-        />
-        <TouchableOpacity className="h-10 w-10 bg-black rounded-xl justify-center items-center ">
-          <Icon.Search color="white" size={12} />
-        </TouchableOpacity>
-      </View>
-
       <View className="flex-row justify-between items-center px-5 py-5">
         <View>
           <Text className="text-xl text-slate-500 font-semibold flex-row justify-between item-center">
@@ -338,7 +346,25 @@ const SearchScreen = ({ navigation }) => {
               <Icon.Download size={30} color="black" />
             </TouchableOpacity>
           </View>
-
+          <View>
+            {showSearch ? (
+              <TouchableOpacity
+                className="bg-orange-400 h-10 w-10 rounded-full justify-center items-center flex-1"
+                //  onPress={()=>navigation.navigate('pdfdownloadcategory',{catname:categoryName})}
+                onPress={toggleSearch}
+              >
+                <Icon.Search size={30} color="black" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                className=""
+                //  onPress={()=>navigation.navigate('pdfdownloadcategory',{catname:categoryName})}
+                onPress={toggleSearch}
+              >
+                <Icon.Search size={30} color="black" />
+              </TouchableOpacity>
+            )}
+          </View>
           <View>
             <Switch
               trackColor={{ false: "#767577", true: "#81b0ff" }}
@@ -349,6 +375,32 @@ const SearchScreen = ({ navigation }) => {
             />
           </View>
         </View>
+      </View>
+
+      <View className="">
+        {showSearch ? (
+          <Animated.View
+            entering={FadeInUp.delay(400).springify()}
+            className="w-90 px-4 py-4 flex-row justify-between items-center space-x-5"
+          >
+            <View className="flex-1">
+              <TextInput
+                value={searchQuery}
+                onChangeText={(text) => setSearchQuery(text)}
+                className="w-90 h-10 border border-slate-300 rounded-2xl bg-white px-4"
+                placeholder="search by name, price, product , availability"
+              />
+            </View>
+            <TouchableOpacity
+              onPress={clearFilters}
+              className="bg-orange-500 h-10 w-10 rounded-full justify-center items-center"
+            >
+              <Icon.X size={20} color="white" />
+            </TouchableOpacity>
+          </Animated.View>
+        ) : (
+          <View className="py-3"></View>
+        )}
       </View>
 
       <ScrollView
@@ -374,6 +426,8 @@ const SearchScreen = ({ navigation }) => {
       {/* <Modal animationType="slide" transparent={true} visible={modalVisible} className="justify-center items-center mt-12">
 
       </Modal> */}
+
+
     </SafeAreaView>
   );
 };
@@ -405,4 +459,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SearchScreen;
+export default CategoryScreen;

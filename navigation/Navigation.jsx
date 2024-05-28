@@ -24,6 +24,12 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import ProfileScreen from "../screens/ProfileScreen";
 import CategoryViewScreen from "../screens/CategoryViewScreen";
 import SupplierViewScreen from "../screens/SupplierViewScreen";
+import EditProfile from "../screens/EditProfileScreen";
+import ResetPassword from "../screens/ResetPasswordScreen";
+import ViewProduct from "../screens/ViewProduct";
+import EventData from "../screens/EventData";
+import ManufacturerScreen from "../screens/Manufacturers";
+import CategoryScreen from "../screens/CategoriesScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -82,6 +88,36 @@ const Navigation = () => {
             name="SupplierView"
             component={SupplierViewScreen}
             options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="EditProfile"
+            component={EditProfile}
+            options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="passreset"
+            component={ResetPassword}
+            options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="viewproduct"
+            component={ViewProduct}
+            options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="eventdata"
+            component={EventData}
+            options={{ headerShown: false, presentation: "modal" }}
+          />
+          <Stack.Screen
+            name="manufacturers"
+            component={ManufacturerScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="categories"
+            component={CategoryScreen}
+            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       </CurrencyProvider>

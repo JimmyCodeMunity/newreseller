@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, StyleSheet, Text, View,Image,Pressable } from "react-native";
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -50,8 +50,14 @@ const ProfileScreen = () => {
           </Text>
         </View>
       ) : (
-        <View className="bg-white items-center">
-          <Text>{loggeduser.firstName} Profile</Text>
+        <View className="bg-white items-center h-full flex-1">
+          <View className="justify-center items-center py-12">
+            <Image
+              source={require("../assets/images/resellersplash.png")}
+              className="h-32 w-32 rounded-full border border-orange-500 border-2xl"
+            />
+          </View>
+          <Text className="text-2xl font-semibold text-slate-600">{loggeduser.firstName + " " + loggeduser.lastName}</Text>
         </View>
       )}
     </SafeAreaView>

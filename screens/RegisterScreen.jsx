@@ -104,7 +104,7 @@ const RegisterScreen = ({ navigation }) => {
   return (
     <SafeAreaView className="flex-1 justify-center items-center">
       <ScrollView
-        className=""
+        className="h-full"
         showsVerticalScrollIndicator={false}
         vertical={true}
         onPress={hideKeyboard}

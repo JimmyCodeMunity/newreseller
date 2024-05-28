@@ -16,8 +16,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState("von@gmail.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -38,7 +38,9 @@ const LoginScreen = ({ navigation }) => {
         await AsyncStorage.setItem("password", password);
         await AsyncStorage.setItem("loginStatus", "LoggedIn");
 
-        console.log(response.data.message);
+        // console.log(response.data.message);   
+        setLoading(false);
+
         navigation.navigate("Home"); // Navigate to the next screen
       }
     } catch (error) {

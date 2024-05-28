@@ -1,6 +1,6 @@
 // GeneralSettings.js
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Dimensions, SafeAreaView, Share, Switch, ScrollView } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity,Linking, Dimensions, SafeAreaView, Share, Switch, ScrollView } from 'react-native';
 import AntIcon from "react-native-vector-icons/AntDesign";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -69,7 +69,7 @@ const SettingScreen = ({ navigation, route }) => {
         `https://res-server-sigma.vercel.app/api/user/usersdata/${email}`
       );
       const gotuser = response.data[0];
-      setLoggedUser(gotuser.firstName);
+      setLoggedUser(gotuser.firstName + " " + gotuser.lastName);
       console.log(gotuser.firstName)
       setLoading(false);
       //   console.log(gotuser.firstName);
@@ -100,9 +100,20 @@ const SettingScreen = ({ navigation, route }) => {
 
 
 
+  // Function to open a URL in the web browser
+  const openWebsite = (url) => {
+    Linking.canOpenURL(url).then((supported) => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        console.log(`Don't know how to open URI: ${url}`);
+      }
+    });
+  };
+
   const handleShare = () => {
     const message = "Share this Awesome App!!";
-    const url = "https://www.mentheal.co.ke";
+    const url = "https://www.resellersprint.com";
 
     Share.share({
       message: message,
@@ -112,9 +123,9 @@ const SettingScreen = ({ navigation, route }) => {
       .catch((error) => console.log(error));
   };
   const settingsOptions = [
-    { title: 'Visit website', onPress: () => console.log('Wi-Fi pressed'), icon: 'globe' },
-    { title: 'Become a manufacturer', onPress: () => console.log('Bluetooth pressed'), icon: 'user' },
-    { title: 'Rate Us on google', onPress: () => console.log('Cellular pressed'), icon: 'star' },
+    { title: 'Visit website', onPress: () => openWebsite("https://www.resellersprint.com"), icon: 'globe' },
+    { title: 'Become a manufacturer', onPress: () => openWebsite("https://resellersprint.com/supplier-register"), icon: 'user' },
+    // { title: 'Rate Us on google', onPress: () => console.log('Cellular pressed'), icon: 'star' },
     { title: 'Share app', onPress: handleShare, icon: 'share' },
 
     // Add more settings options as needed
@@ -159,13 +170,11 @@ const SettingScreen = ({ navigation, route }) => {
               <Text className="text-slate-500 text-2xl py-5">Account</Text>
               <View className="bg-slate-100 shadow-sm w-90 rounded-2xl justify-center">
                 <TouchableOpacity
-                  onPress={() => navigation.navigate('Profile', { email: email })}
                   className="border border-t-0 border-r-0 border-l-0 border-slate-300 px-3 h-16 flex-row justify-between items-center border-b-slate-300">
                   <Text className="text-2xl font-semibold">{loggedUser}</Text>
-                  <FeatherIcon name="chevron-right" size={23} />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate('editProfile', { userEmail: email })}
+                  onPress={() => navigation.navigate('EditProfile', { userEmail: email })}
                   className="border border-t-0 border-r-0 border-l-0 border-slate-300 px-3 h-16 flex-row justify-between items-center border-b-slate-300">
                   <Text className="text-lg">Edit Profile</Text>
                   <FeatherIcon name="chevron-right" size={23} />
