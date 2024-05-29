@@ -12,7 +12,7 @@ import {
   Text,
   Dimensions,
   TextInput,
-  Linking
+  Linking,
 } from "react-native";
 import { Table, TableWrapper, Row, Rows } from "react-native-table-component";
 import axios from "axios";
@@ -71,6 +71,12 @@ const CategoryViewScreen = ({ route, navigation }) => {
       console.log(error);
     }
     setIsRefreshing(false);
+  };
+
+  const handleLinkClick = () => {
+    Linking.openURL(
+      "https://react-pdf-download-reseller.vercel.app/productlist"
+    );
   };
 
   const handleCall = () => {
@@ -206,9 +212,10 @@ const CategoryViewScreen = ({ route, navigation }) => {
     let filteredProducts = products;
 
     if (searchQuery) {
-      filteredProducts = filteredProducts.filter((product) =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchQuery.toLowerCase())
+      filteredProducts = filteredProducts.filter(
+        (product) =>
+          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.sku.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -217,30 +224,31 @@ const CategoryViewScreen = ({ route, navigation }) => {
           const price = isDollar
             ? product.price / product.shop.exchangeRate
             : product.price;
-          return (
-            price >= priceFilter * 0.9 && price <= priceFilter * 1.1
-          );
+          return price >= priceFilter * 0.9 && price <= priceFilter * 1.1;
         })
       : filteredProducts;
 
     const nameFiltered = categoryFilter
-      ? priceFiltered.filter((product) =>
-          product.name &&
-          product.name.toLowerCase().includes(categoryFilter.toLowerCase())
+      ? priceFiltered.filter(
+          (product) =>
+            product.name &&
+            product.name.toLowerCase().includes(categoryFilter.toLowerCase())
         )
       : priceFiltered;
 
     const brandFiltered = brandFilter
-      ? nameFiltered.filter((product) =>
-          product.brand &&
-          product.brand.toLowerCase().includes(brandFilter.toLowerCase())
+      ? nameFiltered.filter(
+          (product) =>
+            product.brand &&
+            product.brand.toLowerCase().includes(brandFilter.toLowerCase())
         )
       : nameFiltered;
 
     const partNumberFiltered = partNumberFilter
-      ? brandFiltered.filter((product) =>
-          product.sku &&
-          product.sku.toLowerCase().includes(partNumberFilter.toLowerCase())
+      ? brandFiltered.filter(
+          (product) =>
+            product.sku &&
+            product.sku.toLowerCase().includes(partNumberFilter.toLowerCase())
         )
       : brandFiltered;
 
@@ -267,13 +275,10 @@ const CategoryViewScreen = ({ route, navigation }) => {
       item.name,
       item.sku,
       isDollar
-        ? `$ ${Number(item.price / item.exchangeRate).toLocaleString(
-            "en-US",
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }
-          )}`
+        ? `$ ${Number(item.price / item.exchangeRate).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`
         : `KES ${Number(item.price).toLocaleString("en-US")}`,
       item.exchangeRate,
 
@@ -291,7 +296,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
               item.price,
               item.categories,
               item.name,
-              item.sku
+              item.sku,
             ]);
             setModalVisible(true);
           }}
@@ -332,38 +337,45 @@ const CategoryViewScreen = ({ route, navigation }) => {
           />
         </Appbar.Header>
         <View className="flex-row justify-between items-center px-5 py-5">
-        <View>
-          <Text className="text-xl text-slate-500 font-semibold flex-row justify-between item-center">
-            Currency:
-            <Text
-              className="font-bold px-2"
-              style={{
-                textDecorationLine: isDollar ? "none" : "line-through",
-                color: isDollar ? "black" : "gray",
-              }}
-            >
-              USD
-            </Text>{" "}
-            ||
-            <Text
-              style={{
-                textDecorationLine: isDollar ? "line-through" : "none",
-                color: isDollar ? "gray" : "black",
-              }}
-              className="font-bold px-2"
-            >
-              KES
+          <View>
+            <Text className="text-xl text-slate-500 font-semibold flex-row justify-between item-center">
+              Currency:
+              <Text
+                className="font-bold px-2"
+                style={{
+                  textDecorationLine: isDollar ? "none" : "line-through",
+                  color: isDollar ? "black" : "gray",
+                }}
+              >
+                USD
+              </Text>{" "}
+              ||
+              <Text
+                style={{
+                  textDecorationLine: isDollar ? "line-through" : "none",
+                  color: isDollar ? "gray" : "black",
+                }}
+                className="font-bold px-2"
+              >
+                KES
+              </Text>
             </Text>
-          </Text>
+          </View>
+          <View className="flex-row justify-between items-center space-x-4">
+            <TouchableOpacity onPress={handleLinkClick}>
+              <Icon.Download color="orange" size={20} />
+            </TouchableOpacity>
+            <Switch
+              trackColor={{ false: "#767577", true: "#f97316" }}
+              thumbColor={isDollar ? "#f97316" : "#f4f3f4"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={() =>
+                setIsDollar((previousState) => !previousState)
+              }
+              value={isDollar}
+            />
+          </View>
         </View>
-        <Switch
-          trackColor={{ false: "#767577", true: "#f97316" }}
-          thumbColor={isDollar ? "#f97316" : "#f4f3f4"}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={() => setIsDollar((previousState) => !previousState)}
-          value={isDollar}
-        />
-      </View>
 
         <ScrollView
           refreshControl={
@@ -378,38 +390,47 @@ const CategoryViewScreen = ({ route, navigation }) => {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
-              <TouchableOpacity style={styles.clearButton} onPress={clearFilters}>
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={clearFilters}
+              >
                 <Text style={styles.clearButtonText}>Clear</Text>
               </TouchableOpacity>
             </View>
-            <Table
-              borderStyle={{
-                borderWidth: 1,
-                borderColor: "#C8E1FF",
-              }}
-            >
-              <Row
-                data={tableHead}
-                style={styles.head}
-                textStyle={styles.text}
-              />
-              <TableWrapper>
-                {renderProductTable().map((rowData, index) => (
-                  <Row
-                    key={index}
-                    data={rowData}
-                    style={[
-                      styles.row,
-                      index % 2 && {
-                        backgroundColor: "#F7F6E7",
-                      },
-                    ]}
-                    textStyle={styles.text}
-                    onPress={() => setSelected(rowData)}
-                  />
-                ))}
-              </TableWrapper>
-            </Table>
+            <ScrollView className="" horizontal={true}>
+              <Table
+                borderStyle={{
+                  borderWidth: 1,
+                  borderColor: "#C8E1FF",
+                }}
+              >
+                <Row
+                  data={tableHead}
+                  style={styles.head}
+                  textStyle={styles.text}
+                  flexArr={[5, 4, 2, 2]}
+                  widthArr={[160, 180, 200, 220, 160]}
+                />
+                <TableWrapper>
+                  {renderProductTable().map((rowData, index) => (
+                    <Row
+                      key={index}
+                      data={rowData}
+                      flexArr={[5, 4, 2, 2]}
+                      widthArr={[160, 180, 200, 220, 160]}
+                      style={[
+                        styles.row,
+                        index % 2 && {
+                          backgroundColor: "#F7F6E7",
+                        },
+                      ]}
+                      textStyle={styles.text}
+                      onPress={() => setSelected(rowData)}
+                    />
+                  ))}
+                </TableWrapper>
+              </Table>
+            </ScrollView>
 
             {productsNotFound && renderEmptyProductsView()}
           </View>
@@ -457,17 +478,19 @@ const CategoryViewScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  head: {
-    height: 40,
-    backgroundColor: "#f1f8ff",
+  head: { height: 50, backgroundColor: "#f97316" },
+  wrapper: { flexDirection: "row" },
+  row: { height: 60, backgroundColor: "#FFF" },
+  text: { textAlign: "center", fontWeight: "bold", color: "#000" },
+  viewDetailsButton: {
+    backgroundColor: "#f97316",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
-  text: {
-    margin: 6,
-    textAlign: "center",
-  },
-  row: {
-    flexDirection: "row",
-    backgroundColor: "#FFF1C1",
+  viewDetailsButtonText: {
+    color: "white",
+    fontSize: 12,
   },
   searchContainer: {
     flexDirection: "row",

@@ -30,6 +30,9 @@ import ViewProduct from "../screens/ViewProduct";
 import EventData from "../screens/EventData";
 import ManufacturerScreen from "../screens/Manufacturers";
 import CategoryScreen from "../screens/CategoriesScreen";
+import PrivacyPolicy from "../screens/PrivacyPolicyScreen";
+import FaqScreen from "../screens/FaqScreen";
+import OurStory from "../screens/OurStoryScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -57,7 +60,7 @@ const Navigation = () => {
           <Stack.Screen
             name="Forgot"
             component={ForgotPassword}
-            options={{ headerShown: false, presentation: "modal" }}
+            options={{ headerShown: true }}
           />
           <Stack.Screen
             name="First"
@@ -118,6 +121,21 @@ const Navigation = () => {
             name="categories"
             component={CategoryScreen}
             options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="story"
+            component={OurStory}
+            options={{ headerShown: true }}
+          />
+          <Stack.Screen
+            name="faq"
+            component={FaqScreen}
+            options={{ headerShown: true }}
+          />
+          <Stack.Screen
+            name="policy"
+            component={PrivacyPolicy}
+            options={{ headerShown: true }}
           />
         </Stack.Navigator>
       </CurrencyProvider>

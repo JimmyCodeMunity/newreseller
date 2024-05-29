@@ -122,11 +122,24 @@ const SettingScreen = ({ navigation, route }) => {
       .then((result) => console.log(result))
       .catch((error) => console.log(error));
   };
+
+  const handleStory = () =>{
+    navigation.navigate('story')
+  }
+  const handlePolicy = () =>{
+    navigation.navigate('policy')
+  }
+  const handleFaq = () =>{
+    navigation.navigate('faq')
+  }
   const settingsOptions = [
     { title: 'Visit website', onPress: () => openWebsite("https://www.resellersprint.com"), icon: 'globe' },
     { title: 'Become a manufacturer', onPress: () => openWebsite("https://resellersprint.com/supplier-register"), icon: 'user' },
     // { title: 'Rate Us on google', onPress: () => console.log('Cellular pressed'), icon: 'star' },
     { title: 'Share app', onPress: handleShare, icon: 'share' },
+    { title: 'Privacy Policy', onPress: handlePolicy, icon: 'share' },
+    { title: 'Faq', onPress: handleFaq, icon: 'share' },
+    { title: 'Our Story', onPress: handleStory, icon: 'share' },
 
     // Add more settings options as needed
   ];
@@ -143,6 +156,7 @@ const SettingScreen = ({ navigation, route }) => {
       // Navigate to the login or authentication screen
       // Example using react-navigation:
       navigation.navigate("Login");
+      setLogoutConfirm(false)
     } catch (error) {
       console.log(error);
     }

@@ -4,10 +4,11 @@ import WebView from 'react-native-webview';
 import NetInfo from '@react-native-community/netinfo';
 import LottieView from 'lottie-react-native';
 
-const ForgotPassword = ({route}) => {
+const PrivacyPolicy = ({route}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(true);
-  const link = "https://resellersprint.com/forgot-password";
+  const link = "https://resellersprint.com/privacy";
+//   const link = "https://docs.google.com/document/d/1AAUMvcyYzh1Qn656M_LlZxtvz_fLf6sUyWlIYDI1Vcc/edit?usp=sharing";
 
   useEffect(() => {
     checkInternetConnection();
@@ -36,7 +37,10 @@ const ForgotPassword = ({route}) => {
           <Text>Please wait....</Text>
         </View>
       ) : (
-        <WebView source={{ uri: link }} />
+        <WebView 
+        // onLoadStart={() => setIsLoading(true)}
+        // onLoad={() => setIsLoading(false)}
+        source={{ uri: link }} />
       )}
     </SafeAreaView>
   );
@@ -66,4 +70,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ForgotPassword;
+export default PrivacyPolicy;

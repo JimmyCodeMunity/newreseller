@@ -223,7 +223,7 @@ const LandingScreen = ({ navigation }) => {
                       source={require("../assets/images/reseller.png")}
                       className="h-10 w-10"
                     />
-                    <Text className="text-slate-500">{supplier.firstName}</Text>
+                    <Text className="text-slate-500">{supplier.companyName?.length > 8 ? supplier.companyName?.slice(0,4)+'...':supplier.companyName}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -288,7 +288,7 @@ const LandingScreen = ({ navigation }) => {
                           <Text className="text-slate-600 font-semibold">
                             {ad.title}
                           </Text>
-                          <Text className="text-black font-semibold">
+                          <Text className="text-slate-500 font-semibold line-through">
                             Ksh.{ad.initialPrice}
                           </Text>
                           <Text className="text-black font-semibold">

@@ -92,6 +92,12 @@ const Manufacturer = ({ route, navigation }) => {
     fetchData();
   }, [supplierId]);
 
+  const handleLinkClick = () => {
+    Linking.openURL(
+      `https://react-pdf-download-reseller.vercel.app/manufaclist/${supplierId}`
+    );
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -249,6 +255,10 @@ const Manufacturer = ({ route, navigation }) => {
             </Text>
           </Text>
         </View>
+        <View className="flex-row justify-between items-center space-x-5">
+          <TouchableOpacity onPress={handleLinkClick}>
+          <Icon.Download color="orange" size={20}/>
+          </TouchableOpacity>
         <Switch
           trackColor={{ false: "#767577", true: "#f97316" }}
           thumbColor={isDollar ? "#f97316" : "#f4f3f4"}
@@ -256,6 +266,7 @@ const Manufacturer = ({ route, navigation }) => {
           onValueChange={() => setIsDollar((previousState) => !previousState)}
           value={isDollar}
         />
+        </View>
       </View>
       <View className="px-4 pb-4 flex-row justify-between items-center">
         <TextInput
@@ -362,7 +373,7 @@ const styles = StyleSheet.create({
   head: { height: 50, backgroundColor: "#f97316" },
   wrapper: { flexDirection: "row" },
   row: { height: 60, backgroundColor: "#FFF" },
-  text: { textAlign: "center", fontWeight: "bold", color: "#000" },
+  text: { textAlign: "center", color: "#000" },
   viewDetailsButton: {
     backgroundColor: "#f97316",
     borderRadius: 20,

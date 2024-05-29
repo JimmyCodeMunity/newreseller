@@ -4,10 +4,10 @@ import WebView from 'react-native-webview';
 import NetInfo from '@react-native-community/netinfo';
 import LottieView from 'lottie-react-native';
 
-const ForgotPassword = ({route}) => {
+const OurStory = ({route}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(true);
-  const link = "https://resellersprint.com/forgot-password";
+  const link = "https://resellersprint.com/about";
 
   useEffect(() => {
     checkInternetConnection();
@@ -66,4 +66,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ForgotPassword;
+export default OurStory;

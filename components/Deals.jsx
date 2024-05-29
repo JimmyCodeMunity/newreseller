@@ -11,7 +11,7 @@ import {
 import { urlFor } from "../sanity";
 import { getEvents } from "../api";
 import { useNavigation } from "@react-navigation/native";// Assuming you have a Card component for individual items
-import ExplainCard from "./ExplainCard";
+
 
 const windowWidth = Dimensions.get("window").width;
 const windowHeight = Dimensions.get("window").height;
