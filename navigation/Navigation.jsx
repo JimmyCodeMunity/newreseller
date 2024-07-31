@@ -33,6 +33,8 @@ import CategoryScreen from "../screens/CategoriesScreen";
 import PrivacyPolicy from "../screens/PrivacyPolicyScreen";
 import FaqScreen from "../screens/FaqScreen";
 import OurStory from "../screens/OurStoryScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import AdsScreen from "../screens/AdsScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -55,7 +57,7 @@ const Navigation = () => {
           <Stack.Screen
             name="Register"
             component={RegisterScreen}
-            options={{ headerShown: false, presentation: "modal" }}
+            options={{ headerShown: true }}
           />
           <Stack.Screen
             name="Forgot"
@@ -137,6 +139,11 @@ const Navigation = () => {
             component={PrivacyPolicy}
             options={{ headerShown: true }}
           />
+          <Stack.Screen
+            name="Ads"
+            component={AdsScreen}
+            options={{ headerShown: false,presentation:'fullscreenModal' }}
+          />
         </Stack.Navigator>
       </CurrencyProvider>
     </NavigationContainer>
@@ -146,14 +153,26 @@ const Navigation = () => {
 //bottomnavigation
 const BottomTabs = ({ route }) => {
   const [isDollar, setIsDollar] = useState(false);
-  const [email, setEmail] = useState("");
+  // const { email } = route.params;
+  const [email,setEmail] = useState('')
   useEffect(() => {
-    getEmail();
+    const checkLogedinStatus = async () => {
+      try {
+        const loginStatus = await AsyncStorage.getItem("loginStatus");
+        const loginEmail = await AsyncStorage.getItem("email");
+        setEmail(loginEmail)
+        //console.log(loginEmail)
+        return loginStatus === "LoggedIn";
+      } catch (error) {
+        console.log("Error checking login status:", error);
+        return false;
+      }
+    };
+
+    checkLogedinStatus();
   }, []);
-  const getEmail = async () => {
-    const savedEmail = await AsyncStorage.getItem("email");
-    setEmail(savedEmail);
-  };
+
+  
 
   return (
     <CurrencyProvider>

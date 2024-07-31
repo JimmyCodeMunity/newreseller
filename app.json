@@ -12,27 +12,31 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.devjimin.resellersprint",
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.devjimin.resellerSprint",
+      "versionCode": 8
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/icon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "eb7cdc8b-8f44-4115-99e3-fa5b39a97c87"
+        "projectId": "914a2277-83a1-49f4-813f-cc05b51cb2e2"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/eb7cdc8b-8f44-4115-99e3-fa5b39a97c87"
+      "url": "https://u.expo.dev/914a2277-83a1-49f4-813f-cc05b51cb2e2"
     }
   }
 }

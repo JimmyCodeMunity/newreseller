@@ -10,7 +10,7 @@ import {
   } from "react-native";
   import React, { useEffect, useState } from "react";
   import { StatusBar } from "expo-status-bar";
-  import * as Icon from "react-native-feather";
+  import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
   import axios from "axios";
   import Loading from "../components/Loading";
   
@@ -22,10 +22,13 @@ import {
       itemDiscount,
       supplier,
       itemPhone,
+      initialprice,
+      newprice
     } = route.params;
   
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
+    const [companyName,setCompanyName] = useState('')
     const [phonenumber, setPhoneNumber] = useState('')
     const [exchangeRate, setExchangeRate] = useState('')
     const [category, setCategory] = useState('');
@@ -44,12 +47,14 @@ import {
         const lname = response.data.user.lastName;
         const phone = response.data.user.phoneNumber;
         const cat = response.data.user.categories;
+        const company = response.data.user.companyName;
         const categoryText = cat.join(", ");
         setExchangeRate(erate);
         setFirstName(fname);
         setLastName(lname);
         setPhoneNumber(phone);
         setCategory(categoryText);
+        setCompanyName(company);
         // console.log("cat",categoryText)
         // setSupplierData(supdata);
         // console.log("supdata", supdata)
@@ -131,13 +136,13 @@ import {
               <View className="relative">
                 <Image
                   className="w-full h-80"
-                  source={require("../assets/images/resellersplash.png")}
+                  source={require("../assets/resell.png")}
                 />
                 <TouchableOpacity
                   onPress={() => navigation.goBack()}
                   className="absolute top-14 left-4 bg-orange-50 p-2 rounded-full shadow border border-slate-200 border-b-xl"
                 >
-                  <Icon.ArrowLeft strokeWidth={3} stroke="orange" />
+                  <Icon name="arrow-left" color="black" size={30}/>
                 </TouchableOpacity>
               </View>
   
@@ -154,7 +159,23 @@ import {
                   <Text className="font-bold tracking-wide ">
                     Supplier:
                     <Text className="text-lg font-bold text-gray-900">
-                      {firstName} {lastName}
+                      {companyName}
+                    </Text>
+                  </Text>
+                </View>
+                <View className="my-1">
+                  <Text className="font-bold tracking-wide ">
+                    Initial Price:
+                    <Text className="text-lg font-bold text-slate-500 line-through">
+                      ${initialprice}
+                    </Text>
+                  </Text>
+                </View>
+                <View className="my-1">
+                  <Text className="font-bold tracking-wide ">
+                    New Price:
+                    <Text className="text-lg font-bold text-gray-900">
+                      ${newprice}
                     </Text>
                   </Text>
                 </View>
@@ -184,7 +205,7 @@ import {
                     onPress={handleWhatsapp}
                     className="rounded-2xl flex-row bg-green-500 p-2 w-90 h-12 justify-center items-center"
                   >
-                    <Icon.MessageCircle size={23} color={"white"} />
+                    <Icon name="whatsapp" color="white" size={30} />
                     <Text className="text-2xl font-semibold text-slate-700">
                       Chat
                     </Text>
@@ -195,23 +216,13 @@ import {
                     onPress={handleCall}
                     className="rounded-2xl flex-row p-2 bg-black w-90 h-12 justify-center items-center"
                   >
-                    <Icon.Phone size={23} color={"white"} />
+                    <Icon name="phone" size={30} color="white" />
                     <Text className="text-2xl font-semibold text-slate-200">
                       Call
                     </Text>
                   </TouchableOpacity>
                 </View>
-                <View className="py-2">
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('manufacturers', { manId: supplier })}
-                    className="rounded-2xl flex-row p-2 bg-black w-90 h-12 justify-center items-center"
-                  >
-  
-                    <Text className="text-2xl font-semibold text-slate-200">
-                      View Supplier Shop
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                
               </View>
             </ScrollView>
           )}

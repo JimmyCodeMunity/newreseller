@@ -10,7 +10,7 @@ import {
   } from "react-native";
   import React, { useEffect, useState } from "react";
   import { StatusBar } from "expo-status-bar";
-  import * as Icon from "react-native-feather";
+  import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
   import axios from "axios";
   import { Switch } from "react-native";
   
@@ -29,7 +29,7 @@ import {
     const [isDollar, setIsDollar] = useState(false);
   
     const convertToDollar = () => {
-      return `$${(price / exchangeRate).toFixed(4)}`;
+      return `KES${(price * exchangeRate).toFixed(2)}`;
     };
     const toggleCurrency = () => {
       setIsDollar(prevState => !prevState);
@@ -43,7 +43,7 @@ import {
     const [category, setCategory] = useState([]);
     const [supplierData, setSupplierData] = useState([]);
     const [loading, setLoading] = useState(false);
-  
+    const [companyname,setCompanyname] = useState('')  
   
     const fetchSupplierDetails = async () => {
       setLoading(true);
@@ -53,12 +53,14 @@ import {
         const supdata = response.data;
         const erate = response.data.user.dollarExchangeRate;
         const fname = response.data.user.firstName;
+        const cname = response.data.user.companyName;
         const lname = response.data.user.lastName;
         const phone = response.data.user.phoneNumber;
         const cat = response.data.user.categories;
         const categoryText = cat.join(", ");
         setExchangeRate(erate);
         setFirstName(fname);
+        setCompanyname(cname);
         setLastName(lname);
         setPhoneNumber(phone);
         setCategory(categoryText);
@@ -146,7 +148,7 @@ import {
               onPress={() => navigation.goBack()}
               className="absolute top-14 left-4 bg-orange-50 p-2 rounded-full shadow border border-slate-200 border-b-xl"
             >
-              <Icon.ArrowLeft strokeWidth={3} stroke="orange" />
+              <Icon name="arrow-left" strokeWidth={3} size={25} stroke="orange" />
             </TouchableOpacity>
           </View>
   
@@ -163,7 +165,7 @@ import {
               <Text className="font-bold tracking-wide ">
                 Supplier:
                 <Text className="text-lg font-bold text-gray-900">
-                  {firstName} {lastName}
+                  {companyname}
                 </Text>
               </Text>
             </View>
@@ -181,7 +183,7 @@ import {
               <Text className="font-bold tracking-wide ">
                 Current Price:
                 <Text className="text-lg font-bold text-gray-900">
-                  {isDollar ? convertToDollar() : price}
+                  {isDollar ? convertToDollar() : `$${price}`}
                 </Text>
               </Text>
             </View>
@@ -198,8 +200,8 @@ import {
             <View className="my-1 flex-row justify-between items-center">
               <View>
                 {!isDollar ? 
-                  <Text className="text-green-600">Convert to dollar</Text>:
-                  <Text className="text-yellow-600">Convert to Kes</Text>
+                  <Text className="text-green-600">Convert to KES</Text>:
+                  <Text className="text-yellow-600">Convert to Dollar</Text>
                 }
               </View>
               <View>
@@ -221,7 +223,7 @@ import {
                 onPress={handleWhatsapp}
                 className="rounded-2xl flex-row bg-green-500 p-2 w-90 h-12 justify-center items-center"
               >
-                <Icon.MessageCircle size={23} color={"white"} />
+                <Icon name="whatsapp" size={23} color={"white"} />
                 <Text className="text-2xl font-semibold text-slate-700">
                   Chat
                 </Text>
@@ -232,7 +234,7 @@ import {
                 onPress={handleCall}
                 className="rounded-2xl flex-row p-2 bg-black w-90 h-12 justify-center items-center"
               >
-                <Icon.Phone size={23} color={"white"} />
+                <Icon name="phone" size={23} color={"white"} />
                 <Text className="text-2xl font-semibold text-slate-200">
                   Call
                 </Text>

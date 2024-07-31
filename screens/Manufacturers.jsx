@@ -14,7 +14,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Loading from "../components/Loading";
 import Animated, { SlideInDown, SlideInLeft } from "react-native-reanimated";
-import * as Icon from "react-native-feather";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useCurrency } from "../components/CurrrencyProvider";
 
 const ManufacturerScreen = ({ navigation, route }) => {
@@ -35,13 +35,18 @@ const ManufacturerScreen = ({ navigation, route }) => {
       const response = await axios.get(
         `https://res-server-sigma.vercel.app/api/shop/sellers`
       );
-      setManufacturer(response.data);
+      const fetchedManufacturers = response.data;
+      const sortedManufacturers = fetchedManufacturers.sort((a, b) => 
+        a.companyName.localeCompare(b.companyName)
+      ); // Sort manufacturers alphabetically by company name
+      setManufacturer(sortedManufacturers);
       setLoading(false);
     } catch (error) {
       console.log(error);
       setLoading(false);
     }
   };
+  
 
   //handle refresh
   const onRefresh = async () => {
@@ -75,9 +80,9 @@ const ManufacturerScreen = ({ navigation, route }) => {
         <View className="flex-row justify-between px-4 w-full items-center">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            className="bg-orange-200 p-2 w-12 h-12 rounded-full shadow border border-slate-200 border-b-xl"
+            className="bg-orange-200 p-2 w-12 h-12 rounded-full justify-center items-center shadow border border-slate-200 border-b-xl"
           >
-            <Icon.ArrowLeft strokeWidth={3} stroke="orange" />
+            <Icon name="arrow-left" size={25} strokeWidth={3} stroke="orange" />
           </TouchableOpacity>
 
           <Text className="text-orange-500 font-bold text-2xl">
@@ -128,7 +133,7 @@ const ManufacturerScreen = ({ navigation, route }) => {
                       </View>
                       <View className="justify-start" style={{ width: "70%" }}>
                         <View className="flex-row items-center space-x-4">
-                          <Icon.MapPin size={20} />
+                          <Icon name="map" size={20} />
                           <Text>{supplier.country}</Text>
                         </View>
                         <Text className="text-neutral-600 mt-3 text-xl font-semibold max-w-40">
@@ -151,6 +156,7 @@ const ManufacturerScreen = ({ navigation, route }) => {
                               supplierPhone: supplier.phoneNumber,
                               supplierExRate: supplier.dollarExchangeRate,
                               supplierAddress: supplier.address,
+                              companyName: supplier.companyName,
                             })
                           }
                           key={supplier._id}

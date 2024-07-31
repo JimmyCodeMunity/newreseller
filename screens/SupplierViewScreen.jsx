@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { Table, TableWrapper, Row, Rows } from "react-native-table-component";
 import axios from "axios";
-import * as Icon from "react-native-feather";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Modal from "react-native-modal";
 import { Appbar } from "react-native-paper";
 import Loading from "../components/Loading";
@@ -29,6 +29,7 @@ const Manufacturer = ({ route, navigation }) => {
     "Name",
     "PartNo.",
     "Price",
+    "Availability",
     "Action",
   ]);
   const [products, setProducts] = useState([]);
@@ -47,6 +48,7 @@ const Manufacturer = ({ route, navigation }) => {
     supplierLastName,
     supplierPhone,
     supplierExRate,
+    companyName,
   } = route.params;
   const supplierFullName = `${supplierFirstName} ${supplierLastName}`;
 
@@ -123,9 +125,9 @@ const Manufacturer = ({ route, navigation }) => {
     }
   };
 
-  const hideKeyboard = () =>{
+  const hideKeyboard = () => {
     Keyboard.dismiss();
-  }
+  };
 
   const onRefresh = async () => {
     setIsRefreshing(true);
@@ -138,15 +140,16 @@ const Manufacturer = ({ route, navigation }) => {
   }, [searchFilter, isDollar]);
 
   const applyFilter = () => {
-    const filtered = products.filter((product) =>
-      product.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      product.sku.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      product.brand.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      (isDollar
-        ? (product.price / supplierExRate).toFixed(2)
-        : product.price.toFixed(2)
-      ).includes(searchFilter)
+    const filtered = products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        product.sku.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        product.brand.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        (isDollar
+          ? (product.price / supplierExRate).toFixed(2)
+          : product.price.toFixed(2)
+        ).includes(searchFilter)
     );
 
     setFilteredProducts(filtered);
@@ -162,12 +165,15 @@ const Manufacturer = ({ route, navigation }) => {
     const tableData = filteredProducts.map((item) => [
       item.name,
       item.sku,
-      isDollar
-        ? `$ ${Number((item.price / supplierExRate).toFixed(2)).toLocaleString("en-US", {
+      !isDollar
+        ? `KES ${Number(
+            (item.price * supplierExRate).toFixed(2)
+          ).toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}`
-        : `KES ${Number(item.price.toFixed(2)).toLocaleString("en-US")}`,
+        : `$ ${Number(item.price.toFixed(2)).toLocaleString("en-US")}`,
+      item.status,
       <View className="justify-center items-center">
         <TouchableOpacity
           className="bg-orange-500 w-16 rounded-2xl h-8 justify-center items-center"
@@ -195,7 +201,7 @@ const Manufacturer = ({ route, navigation }) => {
         <Row
           data={tableHead}
           flexArr={[5, 4, 2, 2]}
-          widthArr={[160, 180, 200, 220]}
+          widthArr={[160, 180, 200, 220, 100]}
           style={styles.head}
           textStyle={styles.text}
         />
@@ -203,7 +209,7 @@ const Manufacturer = ({ route, navigation }) => {
           <Rows
             data={tableData}
             flexArr={[5, 4, 2, 2]}
-            widthArr={[160, 180, 200, 220]}
+            widthArr={[160, 180, 200, 220, 100]}
             style={styles.row}
             textStyle={styles.text}
           />
@@ -221,7 +227,7 @@ const Manufacturer = ({ route, navigation }) => {
       </Appbar.Header>
       <View className="w-full px-5 pt-4">
         <Text className="text-slate-500 font-semibold text-xl">
-          Supplier: {supplierFullName}
+          Supplier: {companyName}
         </Text>
         <Text className="text-slate-500 font-semibold text-xl">
           Contact: {supplierPhone}
@@ -231,6 +237,7 @@ const Manufacturer = ({ route, navigation }) => {
         </Text>
       </View>
       <View className="flex-row justify-between items-center px-5 py-5">
+        <View className="flex-row space-x-3">
         <View>
           <Text className="text-xl text-slate-500 font-semibold flex-row justify-between item-center">
             Currency:
@@ -255,17 +262,21 @@ const Manufacturer = ({ route, navigation }) => {
             </Text>
           </Text>
         </View>
+        <Switch
+              trackColor={{ false: "#767577", true: "lightgrey" }}
+              thumbColor={isDollar ? "orange" : "white"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={() =>
+                setIsDollar((previousState) => !previousState)
+              }
+              value={isDollar}
+            />
+            </View>
         <View className="flex-row justify-between items-center space-x-5">
           <TouchableOpacity onPress={handleLinkClick}>
-          <Icon.Download color="orange" size={20}/>
+            <Icon name="download" color="orange" size={20} />
           </TouchableOpacity>
-        <Switch
-          trackColor={{ false: "#767577", true: "#f97316" }}
-          thumbColor={isDollar ? "#f97316" : "#f4f3f4"}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={() => setIsDollar((previousState) => !previousState)}
-          value={isDollar}
-        />
+          
         </View>
       </View>
       <View className="px-4 pb-4 flex-row justify-between items-center">
@@ -279,7 +290,9 @@ const Manufacturer = ({ route, navigation }) => {
           className="bg-orange-500 rounded p-3 mb-3 w-10 h-10 justify-center items-center flex"
           onPress={clearFilter}
         >
-          <Text className="text-white text-center"><Icon.X size={15} color="white"/></Text>
+          <Text className="text-white text-center">
+            <Icon name="close" size={25} color="white" />
+          </Text>
         </TouchableOpacity>
       </View>
       <ScrollView
@@ -291,9 +304,12 @@ const Manufacturer = ({ route, navigation }) => {
           <Loading />
         ) : productsNotFound ? (
           <View className="flex-1 justify-center items-center pt-12">
-            <Icon.AlertCircle color="red" width={60} height={60} />
+            <Icon name="database-off" color="orange" size={30} />
             <Text className="text-slate-500 font-semibold text-2xl pt-4">
               No Products Found
+            </Text>
+            <Text className="text-slate-500">
+              Scroll down to refresh or try again later
             </Text>
           </View>
         ) : (
@@ -315,15 +331,14 @@ const Manufacturer = ({ route, navigation }) => {
           <Text className="text-sm mb-1">Part No: {selected[1]}</Text>
           <Text className="text-sm mb-1">
             Price:{" "}
-            {isDollar
-              ? `$ ${Number((selected[2] / supplierExRate).toFixed(2)).toLocaleString(
-                  "en-US",
-                  {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }
-                )}`
-              : `KES ${Number(selected[2]).toLocaleString("en-US")}`}
+            {!isDollar
+              ? `KES ${Number(
+                  (selected[2] * supplierExRate).toFixed(2)
+                ).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}`
+              : `$ ${Number(selected[2]).toLocaleString("en-US")}`}
           </Text>
           <Text className="text-sm mb-1">Brand: {selected[3]}</Text>
           <Text className="text-sm mb-1">Category: {selected[4]}</Text>

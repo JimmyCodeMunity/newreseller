@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { SafeAreaView,TouchableOpacity } from "react-native";
 import LottieView from "lottie-react-native";
 import axios from 'axios'
-import * as Icon from 'react-native-feather'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 
@@ -98,7 +98,7 @@ const ResetPassword = ({ navigation, route }) => {
       <View className="flex-1 bg-white px-5">
         <View className="absolute" style={{ top: 30, right: 20 }}>
           <TouchableOpacity onPress={() => navigation.goBack()} className=" bg-orange-400 h-12 w-12 rounded-3xl justify-center items-center" >
-            <Icon.X color="white" size={50} />
+            <Icon name="arrow-left" color="white" size={30} />
           </TouchableOpacity>
         </View>
 

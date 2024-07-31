@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { Table, TableWrapper, Row, Rows } from "react-native-table-component";
 import axios from "axios";
-import * as Icon from "react-native-feather";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Modal from "react-native-modal";
 import { StatusBar } from "expo-status-bar";
 import Loading from "../components/Loading";
@@ -45,6 +45,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
   const [timeModalVisible, setTimeModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [filterModal, setFilterModal] = useState(false);
+  const [found,setFound] = useState(false)
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { isDollar, setIsDollar } = useCurrency();
@@ -75,7 +76,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
 
   const handleLinkClick = () => {
     Linking.openURL(
-      "https://react-pdf-download-reseller.vercel.app/productlist"
+      `https://react-pdf-download-reseller.vercel.app/catlist/${categoryName}`
     );
   };
 
@@ -136,6 +137,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
       const apiData = response.data;
       const exchangeRate = apiData.user.dollarExchangeRate;
       const firstName = apiData.user.firstName;
+      const companyName = apiData.user.companyName;
       const lastName = apiData.user.lastName;
       const phoneNumber = apiData.user.phoneNumber;
       const categories = apiData.user.categories.join(", ");
@@ -146,6 +148,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
         phoneNumber,
         categories,
         lastName,
+        companyName
       };
     } catch (error) {
       console.error("Error fetching exchange rate:", error);
@@ -168,16 +171,18 @@ const CategoryViewScreen = ({ route, navigation }) => {
       setLoading(false);
 
       if (productsWithExchangeRates.length > 0) {
-        setTableHead(["Name", "PartNo.", "Price", "Exchange Rate", "Action"]);
+        setProductsNotFound(false);
+        setTableHead(["Name", "PartNo.", "Price","Availability", "Exchange Rate", "Action"]);
         const rows = productsWithExchangeRates.map((item) => [
           item.name,
           item.sku,
           isDollar
-            ? `$ ${Number(item.price / item.exchangeRate).toLocaleString(
+            ? `KES ${Number(item.price * item.exchangeRate).toLocaleString(
                 "en-US",
                 { minimumFractionDigits: 2, maximumFractionDigits: 2 }
               )}`
-            : `KES ${Number(item.price).toLocaleString("en-US")}`,
+            : `$ ${Number(item.price).toLocaleString("en-US")}`,
+            item.status,
           item.exchangeRate,
           item.available,
         ]);
@@ -274,12 +279,13 @@ const CategoryViewScreen = ({ route, navigation }) => {
     const tableData = filteredProducts.map((item) => [
       item.name,
       item.sku,
-      isDollar
-        ? `$ ${Number(item.price / item.exchangeRate).toLocaleString("en-US", {
+      !isDollar
+        ? `KES ${Number(item.price * item.exchangeRate).toLocaleString("en-US", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}`
-        : `KES ${Number(item.price).toLocaleString("en-US")}`,
+        : `$ ${Number(item.price).toLocaleString("en-US")}`,
+        item.status,
       item.exchangeRate,
 
       <View className="justify-center items-center">
@@ -287,7 +293,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
           className="bg-orange-500 w-16 rounded-2xl h-8 justify-center items-center"
           onPress={() => {
             setSelected([
-              item.firstName,
+              item.companyName,
               item.lastName,
               item.brand,
               item.category,
@@ -301,7 +307,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
             setModalVisible(true);
           }}
         >
-          <Text className="text-white text-sm font-semibold">Action</Text>
+          <Text className="text-white text-sm font-semibold">View</Text>
         </TouchableOpacity>
       </View>,
     ]);
@@ -310,8 +316,14 @@ const CategoryViewScreen = ({ route, navigation }) => {
 
   const renderEmptyProductsView = () => {
     return (
-      <SafeAreaView className="flex-1 justify-center items-center">
-        <Text className="text-gray-500 text-lg">No products found</Text>
+      <SafeAreaView className="flex-1 justify-center items-center my-10">
+        <Icon name="database-off" color="orange" size={30} />
+            <Text className="text-slate-500 font-semibold text-2xl pt-4">
+              No Products Found
+            </Text>
+            <Text className="text-slate-500">
+              Scroll down to refresh or try again later
+            </Text>
       </SafeAreaView>
     );
   };
@@ -337,6 +349,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
           />
         </Appbar.Header>
         <View className="flex-row justify-between items-center px-5 py-5">
+          <View className="flex-row space-x-3">
           <View>
             <Text className="text-xl text-slate-500 font-semibold flex-row justify-between item-center">
               Currency:
@@ -361,19 +374,21 @@ const CategoryViewScreen = ({ route, navigation }) => {
               </Text>
             </Text>
           </View>
-          <View className="flex-row justify-between items-center space-x-4">
-            <TouchableOpacity onPress={handleLinkClick}>
-              <Icon.Download color="orange" size={20} />
-            </TouchableOpacity>
-            <Switch
-              trackColor={{ false: "#767577", true: "#f97316" }}
-              thumbColor={isDollar ? "#f97316" : "#f4f3f4"}
+          <Switch
+              trackColor={{ false: "#767577", true: "lightgrey" }}
+              thumbColor={isDollar ? "orange" : "white"}
               ios_backgroundColor="#3e3e3e"
               onValueChange={() =>
                 setIsDollar((previousState) => !previousState)
               }
               value={isDollar}
             />
+            </View>
+          <View className="flex-row justify-between items-center space-x-4">
+            <TouchableOpacity onPress={handleLinkClick}>
+              <Icon name="download" color="orange" size={30} />
+            </TouchableOpacity>
+            
           </View>
         </View>
 
@@ -397,7 +412,11 @@ const CategoryViewScreen = ({ route, navigation }) => {
                 <Text style={styles.clearButtonText}>Clear</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView className="" horizontal={true}>
+
+            <View>
+              {loading ?<Loading/> :
+              <View>
+                <ScrollView className="" horizontal={true}>
               <Table
                 borderStyle={{
                   borderWidth: 1,
@@ -409,7 +428,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
                   style={styles.head}
                   textStyle={styles.text}
                   flexArr={[5, 4, 2, 2]}
-                  widthArr={[160, 180, 200, 220, 160]}
+                  widthArr={[160, 180, 200, 220, 160,100]}
                 />
                 <TableWrapper>
                   {renderProductTable().map((rowData, index) => (
@@ -417,7 +436,7 @@ const CategoryViewScreen = ({ route, navigation }) => {
                       key={index}
                       data={rowData}
                       flexArr={[5, 4, 2, 2]}
-                      widthArr={[160, 180, 200, 220, 160]}
+                      widthArr={[160, 180, 200, 220, 160,100]}
                       style={[
                         styles.row,
                         index % 2 && {
@@ -431,6 +450,11 @@ const CategoryViewScreen = ({ route, navigation }) => {
                 </TableWrapper>
               </Table>
             </ScrollView>
+              </View>
+              
+              }
+            
+            </View>
 
             {productsNotFound && renderEmptyProductsView()}
           </View>

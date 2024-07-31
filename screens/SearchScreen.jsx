@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { Table, TableWrapper, Row, Rows } from "react-native-table-component";
 import axios from "axios";
-import * as Icon from "react-native-feather";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Modal from "react-native-modal";
 import { StatusBar } from "expo-status-bar";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -147,7 +147,7 @@ const SearchScreen = ({ navigation }) => {
                       maximumFractionDigits: 2,
                     })}`
                   : `KES ${Number(item.price).toLocaleString("en-US")}`,
-                item.isAvailable ? "Available" : "Unavailable",
+                item.status,
                 <TouchableOpacity
                   onPress={() =>
                     navigation.navigate("viewproduct", {
@@ -214,7 +214,7 @@ const SearchScreen = ({ navigation }) => {
   const renderProductTable = () => {
     const tableData = searchedProducts.map((item) => {
       // Calculate price in USD
-      const priceInUSD = item.price / newdollar;
+      const priceInUSD = item.price * newdollar;
       // Calculate price in KES
       const priceInKES = item.price;
 
@@ -223,17 +223,13 @@ const SearchScreen = ({ navigation }) => {
       return [
         item.name,
         item.sku,
-        isDollar
-          ? `$ ${Number(priceInUSD.toFixed(2)).toLocaleString("en-US", {
+        !isDollar
+          ? `KES ${Number(priceInUSD.toFixed(2)).toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}`
-          : `KES ${Number(priceInKES.toFixed(2)).toLocaleString("en-US")}`,
-        item.isAvailable ? (
-          <Text className="text-center items-center">Available</Text>
-        ) : (
-          <Text className="text-center items-center">Unavailable</Text>
-        ),
+          : `$ ${Number(priceInKES.toFixed(2)).toLocaleString("en-US")}`,
+        item.status,
 
         <View className="justify-center items-center">
           <TouchableOpacity
@@ -241,6 +237,7 @@ const SearchScreen = ({ navigation }) => {
             onPress={() => {
               navigation.navigate("viewproduct", {
                 name: item.name,
+                companyname: item.companyName,
                 brand: item.brand,
                 category: item.category,
                 price: item.price,
@@ -297,11 +294,13 @@ const SearchScreen = ({ navigation }) => {
           placeholder="search products,resellers,brands...."
         />
         <TouchableOpacity className="h-10 w-10 bg-black rounded-xl justify-center items-center ">
-          <Icon.Search color="white" size={12} />
+          <Icon name="search-web" color="white" size={30} />
         </TouchableOpacity>
       </View>
 
       <View className="flex-row justify-between items-center px-5 py-5">
+        
+        <View className="flex-row space-x-3">
         <View>
           <Text className="text-xl text-slate-500 font-semibold flex-row justify-between item-center">
             Currency:
@@ -326,6 +325,16 @@ const SearchScreen = ({ navigation }) => {
             </Text>
           </Text>
         </View>
+        <Switch
+              trackColor={{ false: "#767577", true: "lightgrey" }}
+              thumbColor={isDollar ? "orange" : "white"}
+              ios_backgroundColor="#3e3e3e"
+              onValueChange={() =>
+                setIsDollar((previousState) => !previousState)
+              }
+              value={isDollar}
+            />
+            </View>
 
         <View className="flex-row justify-between items-center space-x-3">
           <View>
@@ -335,18 +344,12 @@ const SearchScreen = ({ navigation }) => {
               //   }
               onPress={handleLinkClick}
             >
-              <Icon.Download size={30} color="black" />
+              <Icon name="download" size={30} color="black" />
             </TouchableOpacity>
           </View>
 
           <View>
-            <Switch
-              trackColor={{ false: "#767577", true: "#81b0ff" }}
-              thumbColor={isDollar ? "#f4f3f4" : "#f4f3f4"}
-              ios_backgroundColor="#3e3e3e"
-              onValueChange={() => setIsDollar((prevState) => !prevState)}
-              value={isDollar}
-            />
+            
           </View>
         </View>
       </View>

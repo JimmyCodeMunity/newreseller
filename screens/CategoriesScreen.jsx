@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { Table, TableWrapper, Row, Rows } from "react-native-table-component";
 import axios from "axios";
-import * as Icon from "react-native-feather";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Modal from "react-native-modal";
 import { StatusBar } from "expo-status-bar";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
@@ -302,7 +302,7 @@ const CategoryScreen = ({ navigation,route }) => {
             onPress={() => navigation.goBack()}
             className="py-5 bg-orange-400 rounded-2xl w-full justify-center items-center"
           >
-            {/* <Icon.X size={20} color="white" /> */}
+            
             <Text className="text-white font-bold text-xl tracking-wide">
               Close
             </Text>

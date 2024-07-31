@@ -7,7 +7,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import React, { useState } from "react";
-import * as Icon from "react-native-feather";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const ExplainerScreen = ({navigation}) => {
   const [activeSlide, setActiveSlide] = useState(0);
@@ -35,7 +35,7 @@ const ExplainerScreen = ({navigation}) => {
     {
       id: 3,
       description:
-        "Are you a wholesaler? Reach ypur customers faster.",
+        "Are you a wholesaler? Reach your customers faster.",
       image: require("../assets/images/expl3.png"),
       backgroundColor: "bg-black",
       textColor:"text-orange-500",
@@ -48,7 +48,7 @@ const ExplainerScreen = ({navigation}) => {
     if (activeSlide < slides.length - 1) {
       setActiveSlide(activeSlide + 1);
     } else {
-      navigation.navigate("Login"); // Navigate to the Login screen when onboarding is completed
+      navigation.replace("Login"); // Navigate to the Login screen when onboarding is completed
     }
   };
 
@@ -68,7 +68,7 @@ const ExplainerScreen = ({navigation}) => {
           onPress={handleNext}
           className={`h-12 w-12 rounded-full justify-center items-center ${slides[activeSlide].buttonColor}`}
         >
-          <Icon.ChevronRight size={20} color="white" />
+          <Icon name="arrow-Right" size={20} color="white" />
         </TouchableOpacity>
       </View>
     );

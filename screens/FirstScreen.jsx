@@ -12,7 +12,7 @@ import {
   Modal
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import * as Icon from "react-native-feather";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // import Deals from "../components/Deals";
 
@@ -21,7 +21,7 @@ import axios from "axios";
 const height = Dimensions.get('window').height;
 const width = Dimensions.get('window').width;
 
-const FirstScreen = () => {
+const FirstScreen = ({navigation}) => {
   const [categories, setCategories] = useState([""]);
   const [resellers, setResellers] = useState([""]);
   const [ads, setAds] = useState([""]);
@@ -82,6 +82,12 @@ const FirstScreen = () => {
   const hideModal = () => {
     setIsModalVisible(false);
   };
+
+
+  const handleLogin = () =>{
+    navigation.navigate('Login')
+    hideModal()
+  }
   return (
     <SafeAreaView className="flex-1">
       <View className="px-5 mt-8 justify-between items-center flex-row py-4">
@@ -105,7 +111,7 @@ const FirstScreen = () => {
           placeholder="search products,resellers,brands...."
         />
         <TouchableOpacity onPress={showModal} className="h-10 w-10 bg-black rounded-xl justify-center items-center ">
-          <Icon.Search color="white" size={12} />
+          <Icon name="search-web" color="white" size={20} />
         </TouchableOpacity>
       </View>
       <ScrollView vertical={true}>
@@ -192,7 +198,7 @@ const FirstScreen = () => {
                     </View>
                     <View>
                       <TouchableOpacity className="bg-white h-12 w-12 rounded-full justify-center items-center">
-                        <Icon.ChevronRight size={14} color="oran˝ge" />
+                        <Icon name="arrow-Right" size={24} color="orange" />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -214,7 +220,7 @@ const FirstScreen = () => {
             <Text className="text-xl font-semibold text-center text-slate-600">You are not yet Logged in!!</Text>
             <TouchableOpacity
               className="bg-orange-400 h-10 w-60 rounded-xl justify-center items-center"
-              onPress={()=>navigation.goBack()}
+              onPress={handleLogin}
             >
               <Text style={styles.textStyle}>Login</Text>
             </TouchableOpacity>

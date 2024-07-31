@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View,ActivityIndicator,Dimensions,TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
-import * as Icon from 'react-native-feather';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Modal from "react-native-modal";
 import { useNavigation } from '@react-navigation/native';
 

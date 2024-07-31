@@ -11,27 +11,50 @@ import {
   Dimensions,
   Modal,
   Pressable,
+  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import * as Icon from "react-native-feather";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // import Deals from "../components/Deals";
 
 import axios from "axios";
-import { getEvents } from "../api";
+import { getEvents, getUserdata } from "../api";
 import { urlFor } from "../sanity";
+import Carousel from "react-native-reanimated-carousel";
 
 const height = Dimensions.get("window").height;
 const width = Dimensions.get("window").width;
 
-const LandingScreen = ({ navigation }) => {
+const LandingScreen = ({ navigation, route }) => {
   const [categories, setCategories] = useState([""]);
   const [suppliers, setSuppliers] = useState([""]);
   const [ads, setAds] = useState([""]);
-  const [useremail, setUseremail] = useState("");
+  const [userdata, setUserdata] = useState([]);
+  const [email, setUseremail] = useState("");
   const [loggedUser, setLoggedUser] = useState("");
   const [showLoginReqModal, setShowLoginReqModal] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // ... existing code ...
+
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    setLoading(true);
+    try {
+      await getSuppliers(); // Fetch the updated data
+      await getCategories();
+      await getAds();
+      await getEmail();
+      // await getUserdata();
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+    }
+    setIsRefreshing(false);
+  };
   //get all categories
   const getCategories = async () => {
     try {
@@ -80,6 +103,7 @@ const LandingScreen = ({ navigation }) => {
 
   //get events
   const [events, setEvents] = useState([]);
+  // console.log("logged email", email);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -102,29 +126,36 @@ const LandingScreen = ({ navigation }) => {
   }));
 
   //get userinformation
-  const getUserInfo = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        `https://res-server-sigma.vercel.app/api/user/usersdata/${useremail}`
-      );
-      const gotuser = response.data[0];
-      setLoggedUser(gotuser.firstName);
-      setLoading(false);
-      //   console.log(gotuser.firstName);
-    } catch (error) {
-      console.log(error);
-      setLoading(false);
-      alert.alert("Error getting user information..");
-    }
-  };
+  // const getUserInfo = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await axios.get(
+  //       `https://res-server-sigma.vercel.app/api/user/usersdata/${email}`
+  //     );
+  //     const gotuser = response.data;
+  //     console.log(gotuser);
+  //     console.log(gotuser.firstName);
+  //     setLoggedUser(gotuser.firstName);
+  //     setLoading(false);
+  //     //   console.log(gotuser.firstName);
+  //   } catch (error) {
+  //     console.log(error);
+  //     setLoading(false);
+  //     alert.alert("Error getting user information..");
+  //   }
+  // };
+  useEffect(() => {
+    getUserdata({ email, userdata, setUserdata, setLoading });
+  }, [email]);
+  // console.log("seller",userdata.companyName)
+  const companyName = userdata.companyName;
 
   useEffect(() => {
     getCategories();
     getSuppliers();
     getAds();
     getEmail();
-    getUserInfo();
+    // getUserInfo();
   }, []);
 
   //show login modal
@@ -141,7 +172,12 @@ const LandingScreen = ({ navigation }) => {
     setIsModalVisible(false);
   };
   return (
-    <SafeAreaView className="flex-1">
+    <SafeAreaView
+      className="flex-1"
+      refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+      }
+    >
       {loading ? (
         <View className="flex-1 justify-center items-center">
           <Image
@@ -157,7 +193,7 @@ const LandingScreen = ({ navigation }) => {
           <View className="px-5 mt-8 justify-between items-center flex-row py-4">
             <View>
               <Text className="text-slate-600 text-2xl">
-                Welcome {loggedUser}
+                Welcome {companyName}
               </Text>
             </View>
             <TouchableOpacity
@@ -171,34 +207,47 @@ const LandingScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          
-          <ScrollView vertical={true}>
-            <View className="justify-center items-center px-5 py-5">
-              <ScrollView
-                horizontal={true}
-                className="space-x-10"
-                showsHorizontalScrollIndicator={false}
-              >
-                {events.map((event) => {
-                  const { title, imageUri, link } = event;
-                  return (
-                    <View className="w-80 bg-black h-40 rounded-2xl">
-                      <Image
-                        className="h-full w-full overflow-hidden rounded-2xl"
-                        source={{ uri: urlFor(event.mainImage).url() }}
-                      />
-                    </View>
-                  );
-                })}
-              </ScrollView>
+          <ScrollView
+            vertical={true}
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            }
+          >
+            <View>
+              <Carousel
+                loop
+                width={width}
+                height={width / 2}
+                autoPlay={true}
+                data={events} // Use local images array here
+                scrollAnimationDuration={5000}
+                // onSnapToItem={(index) => console.log('current index:', index)}
+                renderItem={(
+                  { item } // Adjusted to handle items
+                ) => (
+                  <View
+                    className="px-3 space-x-5 shadow shadow-lg"
+                    style={{
+                      flex: 1,
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Image
+                      className="rounded-2xl border border-slate-200"
+                      source={{ uri: urlFor(item.mainImage).url() }} // Use local image
+                      style={{ width: "100%", height: "100%" }}
+                    />
+                  </View>
+                )}
+              />
             </View>
 
             <View className="px-5 flex-row justify-between items-center my-4">
               <Text className="text-slate-600 font-semibold text-xl">
                 Our Suppliers
               </Text>
-              <Pressable onPress={()=>navigation.navigate('manufacturers')}>
-              <Text className="text-slate-600 text-orange-400">View more</Text>
+              <Pressable onPress={() => navigation.navigate("manufacturers")}>
+                <Text className="text-slate-600 text-orange-400">View All</Text>
               </Pressable>
             </View>
 
@@ -206,6 +255,7 @@ const LandingScreen = ({ navigation }) => {
               {suppliers.slice(0, 4).map((supplier) => {
                 return (
                   <TouchableOpacity
+                    key={supplier._id}
                     onPress={() =>
                       navigation.navigate("SupplierView", {
                         supplierId: supplier._id,
@@ -215,6 +265,7 @@ const LandingScreen = ({ navigation }) => {
                         supplierPhone: supplier.phoneNumber,
                         supplierExRate: supplier.dollarExchangeRate,
                         supplierAddress: supplier.address,
+                        companyName: supplier.companyName,
                       })
                     }
                     className="justify-center items-center bg-slate-300 rounded-full h-20 w-20 p-3"
@@ -223,7 +274,11 @@ const LandingScreen = ({ navigation }) => {
                       source={require("../assets/images/reseller.png")}
                       className="h-10 w-10"
                     />
-                    <Text className="text-slate-500">{supplier.companyName?.length > 8 ? supplier.companyName?.slice(0,4)+'...':supplier.companyName}</Text>
+                    <Text className="text-slate-500">
+                      {supplier.companyName?.length > 8
+                        ? supplier.companyName?.slice(0, 4) + "..."
+                        : supplier.companyName}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
@@ -233,13 +288,13 @@ const LandingScreen = ({ navigation }) => {
               <Text className="text-slate-600 font-semibold text-xl">
                 Product Categories
               </Text>
-              
             </View>
 
             <View className="w-full flex-row flex-wrap px-5 justify-between items-start">
               {categories.map((category) => {
                 return (
                   <TouchableOpacity
+                    key={category.id}
                     onPress={() =>
                       navigation.navigate("CategoryView", {
                         categoryName: category.name,
@@ -261,55 +316,69 @@ const LandingScreen = ({ navigation }) => {
               <Text className="text-slate-600 font-semibold text-xl">
                 Ads & Discounts
               </Text>
-              
+              <TouchableOpacity onPress={()=>navigation.navigate('Ads')} className="justify-center p-3">
+                <Text className="text-orange-500 text-md">View all</Text>
+              </TouchableOpacity>
             </View>
 
-            <ScrollView
-              className="space-x-6"
-              horizontal={true}
-              contentContainerStyle={{ paddingHorizontal: 20 }}
-              showsHorizontalScrollIndicator={false}
-            >
-              {ads.map((ad) => {
-                return (
-                  <View className="h-60 w-80">
-                    <TouchableOpacity
-                      
-                      className="py-10 px-5"
-                    >
-                      <ImageBackground
-                        source={require("../assets/images/adback.jpg")}
-                        className="absolute h-40 rounded-2xl overflow-hidden w-80"
-                      />
+            <View>
+              <Carousel
+                loop
+                width={width}
+                height={width / 2}
+                autoPlay={true}
+                data={ads} // Use local images array here
+                scrollAnimationDuration={10000}
+                // onSnapToItem={(index) => console.log('current index:', index)}
+                renderItem={(
+                  { item } // Adjusted to handle items
+                ) => (
+                  <View className="px-3 space-x-1 shadow shadow-lg">
+                    <View className="h-60 w-full">
+                      <TouchableOpacity className="py-10 px-5">
+                        <ImageBackground
+                          source={require("../assets/images/adback.jpg")}
+                          className="absolute h-40 rounded-2xl overflow-hidden w-full"
+                        />
 
-                      <View className="flex-row justify-between">
-                        <View>
-                          <Text className="text-2xl font-bold">{ad.title}</Text>
-                          <Text className="text-slate-600 font-semibold">
-                            {ad.title}
-                          </Text>
-                          <Text className="text-slate-500 font-semibold line-through">
-                            Ksh.{ad.initialPrice}
-                          </Text>
-                          <Text className="text-black font-semibold">
-                            Ksh.{ad.newPrice}
-                          </Text>
+                        <View className="flex-row justify-between">
+                          <View>
+                            <Text className="text-2xl font-bold">
+                              {item.title}
+                            </Text>
+                            <Text className="text-slate-600 font-semibold">
+                              {item.title}
+                            </Text>
+                            <Text className="text-slate-500 font-semibold line-through">
+                              ${item.initialPrice}
+                            </Text>
+                            <Text className="text-black font-semibold">
+                              ${item.newPrice}
+                            </Text>
+                          </View>
+                          <View>
+                            <TouchableOpacity
+                              onPress={() =>
+                                navigation.navigate("eventdata", {
+                                  itemName: item.title,
+                                  supplier: item.supplier,
+                                  itemDescription: item.description,
+                                  initialprice: item.initialPrice,
+                                  newprice: item.newPrice,
+                                })
+                              }
+                              className="bg-white h-12 w-12 rounded-full justify-center items-center"
+                            >
+                              <Icon name="eye" color="black" />
+                            </TouchableOpacity>
+                          </View>
                         </View>
-                        <View>
-                          <TouchableOpacity onPress={()=>navigation.navigate('eventdata',{
-                          itemName:ad.title,
-                          supplier:ad.supplier,
-                          itemDescription:ad.description,}
-                          )} className="bg-white h-12 w-12 rounded-full justify-center items-center">
-                            <Icon.ChevronRight size={14} color="oran˝ge" />
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                );
-              })}
-            </ScrollView>
+                )}
+              />
+            </View>
           </ScrollView>
           <Modal
             animationType="fade"

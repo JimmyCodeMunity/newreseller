@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   Pressable,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Snackbar } from "react-native-paper";
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,60 +19,82 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    checkInternetConnection();
+  }, []);
+
+  const checkInternetConnection = async () => {
+    const netInfoState = await NetInfo.fetch();
+    setIsConnected(netInfoState.isConnected);
+    setIsLoading(false);
+  };
 
   const handleLogin = async () => {
     setLoading(true);
-    try {
-      const response = await axios.post(
-        "https://res-server-sigma.vercel.app/api/user/login",
-        {
-          email,
-          password,
-        }
-      );
 
-      // Assuming your API returns a message for successful login
-      if (response.status === 200) {
-        console.log("Login successful:", response.status);
-        await AsyncStorage.setItem("email", email);
-        await AsyncStorage.setItem("password", password);
-        await AsyncStorage.setItem("loginStatus", "LoggedIn");
+    if (isConnected) {
+      if (email==="" || password==="") {
+        alert("Please fill all the fields");
+        setLoading(false)
+      } else {
+        try {
+          const response = await axios.post(
+            "https://res-server-sigma.vercel.app/api/user/login",
+            {
+              email,
+              password,
+            }
+          );
 
-        // console.log(response.data.message);   
-        setLoading(false);
+          // Assuming your API returns a message for successful login
+          if (response.status === 200) {
+            console.log("Login successful:", response.status);
+            await AsyncStorage.setItem("email", email);
+            await AsyncStorage.setItem("password", password);
+            await AsyncStorage.setItem("loginStatus", "LoggedIn");
 
-        navigation.navigate("Home"); // Navigate to the next screen
-      }
-    } catch (error) {
-      setLoading(false);
-
-      // Check if the error is an Axios error and handle the status codes
-      if (axios.isAxiosError(error)) {
-        const { response } = error;
-
-        if (response) {
-          if (response.status === 401) {
-            // Invalid password
-            console.error(response.data.error);
-            alert("Invalid password. Please check your credentials.");
-          } else if (response.status === 404) {
-            // User not found
-            console.error(response.data.error);
-            alert("User not found. Please create an account first.");
-          } else if (response.status === 403) {
-            // Account not approved
-            console.error(response.data.error);
-            alert("Account not approved.Please wait for approval.");
+            // console.log(response.data.message);
             setLoading(false);
-          } else {
-            // Handle other status codes
-            console.error(response.data.error);
+
+            navigation.replace("Home", { email }); // Navigate to the next screen
           }
-        } else {
-          // Handle other errors (network issues, etc.)
-          console.error("An error occurred:", error.message);
+        } catch (error) {
+          setLoading(false);
+
+          // Check if the error is an Axios error and handle the status codes
+          if (axios.isAxiosError(error)) {
+            const { response } = error;
+
+            if (response) {
+              if (response.status === 401) {
+                // Invalid password
+                console.error(response.data.error);
+                alert("Invalid password. Please check your credentials.");
+              } else if (response.status === 404) {
+                // User not found
+                console.error(response.data.error);
+                alert("User not found. Please create an account first.");
+              } else if (response.status === 403) {
+                // Account not approved
+                console.error(response.data.error);
+                alert("Account not approved.Please wait for approval.");
+                setLoading(false);
+              } else {
+                // Handle other status codes
+                console.error(response.data.error);
+              }
+            } else {
+              // Handle other errors (network issues, etc.)
+              console.error("An error occurred:", error.message);
+            }
+          }
         }
       }
+    } else {
+      alert("Check your connection");
+      setLoading(false)
     }
   };
 
@@ -88,7 +110,7 @@ const LoginScreen = ({ navigation }) => {
           className="h-10 w-80 border my-10 px-2 border-slate-400 border-t-0 border-l-0 border-r-0"
           placeholder="enter Email"
           value={email}
-          onChangeText={(text) => setEmail(text)}
+          onChangeText={(text) => setEmail(text.toLowerCase())}
         />
         <TextInput
           secureTextEntry
