@@ -18,6 +18,7 @@ import LottieView from "lottie-react-native";
 import { Appbar } from "react-native-paper";
 
 const EditProfile = ({ navigation, route }) => {
+  
   const { userEmail } = route.params;
   const [userdata, setUserdata] = useState({});
   const [name, setName] = useState("");

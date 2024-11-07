@@ -1,5 +1,5 @@
 // GeneralSettings.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity,Linking, Dimensions, SafeAreaView, Share, Switch, ScrollView, RefreshControl } from 'react-native';
 import AntIcon from "react-native-vector-icons/AntDesign";
 import FeatherIcon from "react-native-vector-icons/Feather";
@@ -12,6 +12,7 @@ const windowHeight = Dimensions.get("window").height;
 import LottieView from "lottie-react-native";
 import { useCurrency } from '../components/CurrrencyProvider';
 import { CommonActions, StackActions } from '@react-navigation/native';
+import { AuthContext } from '../context/AuthContext';
 
 
 
@@ -21,7 +22,7 @@ const SettingScreen = ({ navigation, route }) => {
   // console.log(email);
   //const [isDollar,setIsDollar] = useState(true);
   const { isDollar, setIsDollar } = useCurrency();
-  const [userdata, setUserdata] = useState([]);
+  const {userdata,logout} = useContext(AuthContext)
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState("");
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -29,25 +30,7 @@ const SettingScreen = ({ navigation, route }) => {
   const [isLogoutConfirm, setLogoutConfirm] = useState(false);
   const [loggedInUser, setLoggedInUser] = useState("");
 
-  const getEmail = async () => {
-    try {
-      const email = await AsyncStorage.getItem("email");
-      if(!email){
-        navigation.navigate("Login")
-      }else{
-        setEmail(email);
-
-      }
-      
-
-      // const thisuser = await AsyncStorage.getItem("loggedUser");
-      // setLoggedInUser(thisuser)
-
-    } catch (error) {
-      console.log(error);
-      
-    }
-  };
+  
 
 
 
@@ -67,26 +50,7 @@ const SettingScreen = ({ navigation, route }) => {
   //     })
   // }
 
-  useEffect(() => {
-    const checkLogedinStatus = async () => {
-      try {
-        const loginStatus = await AsyncStorage.getItem("loginStatus");
-        const loginEmail = await AsyncStorage.getItem("email");
-        if(loginEmail === ""){
-          navigation.navigate("Login")
-        }
-        setEmail(loginEmail)
-        setSession(loginStatus);
-        //console.log(loginEmail)
-        return loginStatus === "LoggedIn";
-      } catch (error) {
-        console.log("Error checking login status:", error);
-        return false;
-      }
-    };
 
-    checkLogedinStatus();
-  }, []);
   const [loggedUser,setLoggedUser] = useState('');
 
   const getUserInfo = async () => {
@@ -115,12 +79,7 @@ const SettingScreen = ({ navigation, route }) => {
       Alert.alert("Error getting user information..");
     }
   };
-  useEffect(()=>{
-    getEmail();
-    // getUserInfo();
-    
-
-  },[])
+  
 
   
 
@@ -128,12 +87,7 @@ const SettingScreen = ({ navigation, route }) => {
   
 
 
-  useEffect(() => {
-    getUserdata({ email, userdata, setUserdata, setLoading })
-
-  }, [email])
-  // console.log("seller",userdata.companyName)
-  const companyName = userdata.companyName;
+  
   
 
 
@@ -154,17 +108,14 @@ const SettingScreen = ({ navigation, route }) => {
     });
   };
 
-  useEffect(()=>{
-    getEmail();
-    
-  },[])
+  
 
 
   const onRefresh = async () => {
     setIsRefreshing(true);
     setLoading(true);
     try {
-      await getEmail();
+      
       
       // await getUserdata();
       setLoading(false);
@@ -231,26 +182,9 @@ const SettingScreen = ({ navigation, route }) => {
     // Add more settings options as needed
   ];
   //logout function start
-  const logout = async () => {
-    // Perform any necessary logout actions (e.g., clear user session, reset state)
-
-    // Remove user token or session data from AsyncStorage
-    try {
-      navigation.dispatch(StackActions.popToTop());
-      await AsyncStorage.setItem("loginStatus", "LoggedOut");
-      await AsyncStorage.setItem("email", "");
-
-      // Replace 'userToken' with your specific token or session key
-      // Navigate to the login or authentication screen
-      // Example using react-navigation:
-      // navigation.navigate("Login");
-      
-      setLogoutConfirm(false)
-      
-      return true;
-    } catch (error) {
-      console.log(error);
-    }
+  const handleLogout = async () => {
+    await logout();
+    
 
   };
 
@@ -285,10 +219,10 @@ const SettingScreen = ({ navigation, route }) => {
               <View className="bg-slate-100 shadow-sm w-90 rounded-2xl justify-center">
                 <TouchableOpacity
                   className="border border-t-0 border-r-0 border-l-0 border-slate-300 px-3 h-16 flex-row justify-between items-center border-b-slate-300">
-                  <Text className="text-2xl font-semibold">{companyName}</Text>
+                  <Text className="text-2xl font-semibold">{userdata?.userdata?.companyName}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate('EditProfile', { userEmail: email })}
+                  onPress={() => navigation.navigate('EditProfile', { userEmail: userdata?.userdata?.email })}
                   className="border border-t-0 border-r-0 border-l-0 border-slate-300 px-3 h-16 flex-row justify-between items-center border-b-slate-300">
                   <Text className="text-lg">Edit Profile</Text>
                   <FeatherIcon name="chevron-right" size={23} />
@@ -352,7 +286,7 @@ const SettingScreen = ({ navigation, route }) => {
               <TouchableOpacity onPress={() => setLogoutConfirm(false)} className="bg-orange-400 w-32 h-12 my-3 rounded-2xl justify-center items-center">
                 <Text className="text-white font-semibold text-xl">Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={logout} className="bg-red-400 w-32 h-12 my-3 rounded-2xl justify-center items-center">
+              <TouchableOpacity onPress={handleLogout} className="bg-red-400 w-32 h-12 my-3 rounded-2xl justify-center items-center">
                 <Text className="text-white font-semibold text-xl">Logout</Text>
               </TouchableOpacity>
             </View>

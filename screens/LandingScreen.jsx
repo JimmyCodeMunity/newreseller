@@ -13,7 +13,7 @@ import {
   Pressable,
   RefreshControl,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // import Deals from "../components/Deals";
@@ -22,6 +22,7 @@ import axios from "axios";
 import { getEvents, getUserdata } from "../api";
 import { urlFor } from "../sanity";
 import Carousel from "react-native-reanimated-carousel";
+import { AuthContext } from "../context/AuthContext";
 
 const height = Dimensions.get("window").height;
 const width = Dimensions.get("window").width;
@@ -30,7 +31,7 @@ const LandingScreen = ({ navigation, route }) => {
   const [categories, setCategories] = useState([""]);
   const [suppliers, setSuppliers] = useState([""]);
   const [ads, setAds] = useState([""]);
-  const [userdata, setUserdata] = useState([]);
+  const { userdata } = useContext(AuthContext);
   const [email, setUseremail] = useState("");
   const [loggedUser, setLoggedUser] = useState("");
   const [showLoginReqModal, setShowLoginReqModal] = useState(false);
@@ -144,11 +145,11 @@ const LandingScreen = ({ navigation, route }) => {
   //     alert.alert("Error getting user information..");
   //   }
   // };
-  useEffect(() => {
-    getUserdata({ email, userdata, setUserdata, setLoading });
-  }, [email]);
-  // console.log("seller",userdata.companyName)
-  const companyName = userdata.companyName;
+  // useEffect(() => {
+  //   getUserdata({ email, userdata, setUserdata, setLoading });
+  // }, [email]);
+  // // console.log("seller",userdata.companyName)
+  // const companyName = userdata.companyName;
 
   useEffect(() => {
     getCategories();
@@ -193,7 +194,7 @@ const LandingScreen = ({ navigation, route }) => {
           <View className="px-5 mt-8 justify-between items-center flex-row py-4">
             <View>
               <Text className="text-slate-600 text-2xl">
-                Welcome {companyName}
+                Welcome {userdata?.userdata?.companyName}
               </Text>
             </View>
             <TouchableOpacity
@@ -316,7 +317,10 @@ const LandingScreen = ({ navigation, route }) => {
               <Text className="text-slate-600 font-semibold text-xl">
                 Ads & Discounts
               </Text>
-              <TouchableOpacity onPress={()=>navigation.navigate('Ads')} className="justify-center p-3">
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Ads")}
+                className="justify-center p-3"
+              >
                 <Text className="text-orange-500 text-md">View all</Text>
               </TouchableOpacity>
             </View>

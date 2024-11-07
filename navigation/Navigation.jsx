@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
 import SplashScreen from "../screens/SplashScreen";
@@ -35,115 +35,134 @@ import FaqScreen from "../screens/FaqScreen";
 import OurStory from "../screens/OurStoryScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AdsScreen from "../screens/AdsScreen";
+import ChatScreen from "../screens/ChatScreen";
+import ChatRoom from "../screens/ChatRoom";
+import { AuthContext } from "../context/AuthContext";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const Navigation = () => {
+  const { isLoggedIn } = useContext(AuthContext);
   return (
     <NavigationContainer>
       <CurrencyProvider>
         <Stack.Navigator>
-          <Stack.Screen
-            name="Splash"
-            component={SplashScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Register"
-            component={RegisterScreen}
-            options={{ headerShown: true }}
-          />
-          <Stack.Screen
-            name="Forgot"
-            component={ForgotPassword}
-            options={{ headerShown: true }}
-          />
-          <Stack.Screen
-            name="First"
-            component={FirstScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Home"
-            component={BottomTabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Explainer"
-            component={ExplainerScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{ headerShown: false, presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="CategoryView"
-            component={CategoryViewScreen}
-            options={{ headerShown: false, presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="SupplierView"
-            component={SupplierViewScreen}
-            options={{ headerShown: false, presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="EditProfile"
-            component={EditProfile}
-            options={{ headerShown: false, presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="passreset"
-            component={ResetPassword}
-            options={{ headerShown: false, presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="viewproduct"
-            component={ViewProduct}
-            options={{ headerShown: false, presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="eventdata"
-            component={EventData}
-            options={{ headerShown: false, presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="manufacturers"
-            component={ManufacturerScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="categories"
-            component={CategoryScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="story"
-            component={OurStory}
-            options={{ headerShown: true }}
-          />
-          <Stack.Screen
-            name="faq"
-            component={FaqScreen}
-            options={{ headerShown: true }}
-          />
-          <Stack.Screen
-            name="policy"
-            component={PrivacyPolicy}
-            options={{ headerShown: true }}
-          />
-          <Stack.Screen
-            name="Ads"
-            component={AdsScreen}
-            options={{ headerShown: false,presentation:'fullscreenModal' }}
-          />
+          {!isLoggedIn ? (
+            <>
+              <Stack.Screen
+                name="Splash"
+                component={SplashScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+                options={{ headerShown: true }}
+              />
+              <Stack.Screen
+                name="Forgot"
+                component={ForgotPassword}
+                options={{ headerShown: true }}
+              />
+              <Stack.Screen
+                name="First"
+                component={FirstScreen}
+                options={{ headerShown: false }}
+              />
+            </>
+          ) : (
+            <>
+              <Stack.Screen
+                name="Home"
+                component={BottomTabs}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Explainer"
+                component={ExplainerScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="CategoryView"
+                component={CategoryViewScreen}
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="SupplierView"
+                component={SupplierViewScreen}
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="EditProfile"
+                component={EditProfile}
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="passreset"
+                component={ResetPassword}
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="viewproduct"
+                component={ViewProduct}
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="eventdata"
+                component={EventData}
+                options={{ headerShown: false, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="manufacturers"
+                component={ManufacturerScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="categories"
+                component={CategoryScreen}
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="story"
+                component={OurStory}
+                options={{ headerShown: true }}
+              />
+              <Stack.Screen
+                name="faq"
+                component={FaqScreen}
+                options={{ headerShown: true }}
+              />
+              <Stack.Screen
+                name="ChatRoom"
+                component={ChatRoom}
+                options={{ headerShown: true }}
+              />
+              <Stack.Screen
+                name="policy"
+                component={PrivacyPolicy}
+                options={{ headerShown: true }}
+              />
+              <Stack.Screen
+                name="Ads"
+                component={AdsScreen}
+                options={{
+                  headerShown: false,
+                  presentation: "fullscreenModal",
+                }}
+              />
+            </>
+          )}
         </Stack.Navigator>
       </CurrencyProvider>
     </NavigationContainer>
@@ -154,13 +173,13 @@ const Navigation = () => {
 const BottomTabs = ({ route }) => {
   const [isDollar, setIsDollar] = useState(false);
   // const { email } = route.params;
-  const [email,setEmail] = useState('')
+  const [email, setEmail] = useState("");
   useEffect(() => {
     const checkLogedinStatus = async () => {
       try {
         const loginStatus = await AsyncStorage.getItem("loginStatus");
         const loginEmail = await AsyncStorage.getItem("email");
-        setEmail(loginEmail)
+        setEmail(loginEmail);
         //console.log(loginEmail)
         return loginStatus === "LoggedIn";
       } catch (error) {
@@ -171,8 +190,6 @@ const BottomTabs = ({ route }) => {
 
     checkLogedinStatus();
   }, []);
-
-  
 
   return (
     <CurrencyProvider>
@@ -189,6 +206,8 @@ const BottomTabs = ({ route }) => {
               iconName = "magnify";
             } else if (route.name === "Settings") {
               iconName = "cog";
+            } else if ((route.name = "Chats")) {
+              iconName = "chat";
             }
 
             return <Icon name={iconName} size={size} color={color} />;
@@ -209,6 +228,13 @@ const BottomTabs = ({ route }) => {
         <Tab.Screen
           name="Search"
           component={SearchScreen}
+          initialParams={{ email }}
+          options={{ headerShown: false }}
+        />
+
+        <Tab.Screen
+          name="Chats"
+          component={ChatScreen}
           initialParams={{ email }}
           options={{ headerShown: false }}
         />

@@ -8,18 +8,21 @@ import {
   TouchableOpacity,
   Pressable,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Snackbar } from "react-native-paper";
 import NetInfo from "@react-native-community/netinfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import axios from "axios";
+import { BASE_URL } from "../config";
+import { AuthContext } from "../context/AuthContext";
 
 const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("von@gmail.com");
+  const [password, setPassword] = useState("123456");
+  const { userdata, loading, login } = useContext(AuthContext);
   const [isConnected, setIsConnected] = useState(false);
+  const [loadingstate,setLoading] = useState(loading);
 
   useEffect(() => {
     checkInternetConnection();
@@ -28,73 +31,77 @@ const LoginScreen = ({ navigation }) => {
   const checkInternetConnection = async () => {
     const netInfoState = await NetInfo.fetch();
     setIsConnected(netInfoState.isConnected);
-    setIsLoading(false);
+    setLoading(false);
   };
 
   const handleLogin = async () => {
     setLoading(true);
 
     if (isConnected) {
-      if (email==="" || password==="") {
+      if (email === "" || password === "") {
         alert("Please fill all the fields");
-        setLoading(false)
+        setLoading(false);
       } else {
-        try {
-          const response = await axios.post(
-            "https://res-server-sigma.vercel.app/api/user/login",
-            {
-              email,
-              password,
-            }
-          );
+        await login(email, password);
+        // Alert.alert("Login successful");
+        navigation.navigate("Home",{email});
+        setLoading(false);
+        // try {
+        //   const response = await axios.post(
+        //     `${BASE_URL}/login`,
+        //     {
+        //       email,
+        //       password,
+        //     }
+        //   );
 
-          // Assuming your API returns a message for successful login
-          if (response.status === 200) {
-            console.log("Login successful:", response.status);
-            await AsyncStorage.setItem("email", email);
-            await AsyncStorage.setItem("password", password);
-            await AsyncStorage.setItem("loginStatus", "LoggedIn");
+        //   // Assuming your API returns a message for successful login
+        //   if (response.status === 200) {
+        //     console.log("Login successful:", response.status);
+        //     await AsyncStorage.setItem("email", email);
+        //     await AsyncStorage.setItem("password", password);
+        //     await AsyncStorage.setItem("loginStatus", "LoggedIn");
 
-            // console.log(response.data.message);
-            setLoading(false);
+        //     // console.log(response.data.message);
+        //     setLoading(false);
 
-            navigation.replace("Home", { email }); // Navigate to the next screen
-          }
-        } catch (error) {
-          setLoading(false);
+        //     navigation.replace("Home", { email }); // Navigate to the next screen
+        //   }
+        // } catch (error) {
+        //   setLoading(false);
 
-          // Check if the error is an Axios error and handle the status codes
-          if (axios.isAxiosError(error)) {
-            const { response } = error;
+        //   // Check if the error is an Axios error and handle the status codes
+        //   if (axios.isAxiosError(error)) {
+        //     const { response } = error;
 
-            if (response) {
-              if (response.status === 401) {
-                // Invalid password
-                console.error(response.data.error);
-                alert("Invalid password. Please check your credentials.");
-              } else if (response.status === 404) {
-                // User not found
-                console.error(response.data.error);
-                alert("User not found. Please create an account first.");
-              } else if (response.status === 403) {
-                // Account not approved
-                console.error(response.data.error);
-                alert("Account not approved.Please wait for approval.");
-                setLoading(false);
-              } else {
-                // Handle other status codes
-                console.error(response.data.error);
-              }
-            } else {
-              // Handle other errors (network issues, etc.)
-              console.error("An error occurred:", error.message);
-            }
-          }
-        }
+        //     if (response) {
+        //       if (response.status === 401) {
+        //         // Invalid password
+        //         console.error(response.data.error);
+        //         alert("Invalid password. Please check your credentials.");
+        //       } else if (response.status === 404) {
+        //         // User not found
+        //         console.error(response.data.error);
+        //         alert("User not found. Please create an account first.");
+        //       } else if (response.status === 403) {
+        //         // Account not approved
+        //         console.error(response.data.error);
+        //         alert("Account not approved.Please wait for approval.");
+        //         setLoading(false);
+        //       } else {
+        //         // Handle other status codes
+        //         console.error(response.data.error);
+        //       }
+        //     } else {
+        //       // Handle other errors (network issues, etc.)
+        //       console.error("An error occurred:", error.message);
+        //     }
+        //   }
+        // }
       }
     } else {
       alert("Check your connection");
-      setLoading(false)
+      setLoading(false);
     }
   };
 
