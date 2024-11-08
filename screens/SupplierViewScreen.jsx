@@ -223,7 +223,10 @@ const Manufacturer = ({ route, navigation }) => {
       <Appbar.Header>
         <Appbar.BackAction onPress={() => navigation.goBack()} />
         <Appbar.Content title="Supplier Products" />
-        <Appbar.Action icon="magnify" onPress={() => {}} />
+        <Appbar.Action icon="chat" onPress={()=>navigation.navigate("InChatRoom",{
+                companyName:companyName,
+                companyId:supplierId
+              })} />
       </Appbar.Header>
       <View className="w-full px-5 pt-4">
         <Text className="text-slate-500 font-semibold text-xl">

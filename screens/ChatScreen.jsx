@@ -7,6 +7,7 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
+  Pressable,
 } from "react-native";
 import React from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -45,7 +46,8 @@ const ChatScreen = ({ navigation, route }) => {
       onPress={()=>navigation.navigate('ChatRoom',{chat:chat})}
       className="w-full h-12 mb-4 flex-row items-center space-x-1 justify-between">
         <View className="h-full w-[20%] justify-center items-center">
-          <View className="w-12 h-12 bg-slate-200 rounded-full"></View>
+          <View className="w-12 h-12 bg-slate-200 rounded-full justify-center items-center">
+          <Text className="text-2xl text-slate-600 font-semibold">{chat?.name.slice(0,1)}</Text></View>
         </View>
         <View className="h-full w-[80%] border border-1 pr-4 flex-row items-center justify-between border-slate-200 border-t-0 border-r-0 border-l-0">
           <View>
@@ -71,7 +73,10 @@ const ChatScreen = ({ navigation, route }) => {
         <View>
           <Text className="text-2xl font-semibold">Chats</Text>
         </View>
-        <View>
+        <View className="flex-row space-x-3 items-center">
+          <Pressable className="bg-black h-10 w-10 rounded-full justify-center items-center">
+          <Icon name="plus" size={25} color="white" />
+          </Pressable>
           <Icon name="menu" size={25} />
         </View>
       </View>

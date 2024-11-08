@@ -37,6 +37,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import AdsScreen from "../screens/AdsScreen";
 import ChatScreen from "../screens/ChatScreen";
 import ChatRoom from "../screens/ChatRoom";
+import InChatRoom from "../screens/InChatRoom";
 import { AuthContext } from "../context/AuthContext";
 
 const Stack = createNativeStackNavigator();
@@ -146,7 +147,12 @@ const Navigation = () => {
               <Stack.Screen
                 name="ChatRoom"
                 component={ChatRoom}
-                options={{ headerShown: true }}
+                options={{ headerShown: true ,presentation:"modal"}}
+              />
+              <Stack.Screen
+                name="InChatRoom"
+                component={InChatRoom}
+                options={{ headerShown: true ,presentation:"modal"}}
               />
               <Stack.Screen
                 name="policy"

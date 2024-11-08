@@ -135,8 +135,10 @@ const CategoryViewScreen = ({ route, navigation }) => {
         `https://res-server-sigma.vercel.app/api/shop/usersdata/${item.supplier}`
       );
       const apiData = response.data;
+      const _id = apiData.user._id;
       const exchangeRate = apiData.user.dollarExchangeRate;
       const firstName = apiData.user.firstName;
+      console.log("firstname",firstName)
       const companyName = apiData.user.companyName;
       const lastName = apiData.user.lastName;
       const phoneNumber = apiData.user.phoneNumber;
@@ -148,7 +150,8 @@ const CategoryViewScreen = ({ route, navigation }) => {
         phoneNumber,
         categories,
         lastName,
-        companyName
+        companyName,
+        _id
       };
     } catch (error) {
       console.error("Error fetching exchange rate:", error);
@@ -303,6 +306,8 @@ const CategoryViewScreen = ({ route, navigation }) => {
               item.categories,
               item.name,
               item.sku,
+              item._id,
+              item.firstName,
             ]);
             setModalVisible(true);
           }}
@@ -475,12 +480,22 @@ const CategoryViewScreen = ({ route, navigation }) => {
           <Text>Name: {selected[0] || "N/A"}</Text>
           <Text>Phone: {selected[4] || "N/A"}</Text>
           <Text>Exchange Rate: {selected[5] || "N/A"}</Text>
-          <View className="mt-4 flex-row justify-around w-full">
+          <Text>compid: {selected[10] || "N/A"}</Text>
+          <View className="mt-4 flex-row justify-between w-full">
             <TouchableOpacity
               className="bg-green-500 px-4 py-2 rounded"
               onPress={handleWhatsapp}
             >
               <Text className="text-white">WhatsApp</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="bg-orange-500 px-4 py-2 rounded"
+              onPress={()=>navigation.navigate("InChatRoom",{
+                companyName:selected[0],
+                companyId:selected[10]
+              })}
+            >
+              <Text className="text-white">Chat in App</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="bg-blue-500 px-4 py-2 rounded"

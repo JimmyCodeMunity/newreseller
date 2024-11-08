@@ -25,14 +25,14 @@ const SplashScreen = ({ navigation }) => {
   const checkInternetConnection = async () => {
     const netInfoState = await NetInfo.fetch();
     setIsConnected(netInfoState.isConnected);
-    setIsLoading(false);
+    setLoading(false);
   };
 
-  useEffect(() => {
-    setTimeout(() => {
-      CheckLogin();
-    }, 3000);
-  }, []);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     // CheckLogin();
+  //   }, 3000);
+  // }, []);
 
   //check login status
   const CheckLogin = async () => {
@@ -64,7 +64,7 @@ const SplashScreen = ({ navigation }) => {
         />
         
 
-        {!loading && (
+        {loading && (
           <View className="justify-center items-center my-3">
             <Text className="text-slate-600 font-semibold text-xl">
               Checking Login status...
@@ -74,7 +74,7 @@ const SplashScreen = ({ navigation }) => {
         )}
       </View>
 
-      {loading && (
+      {!loading && (
         <View className="absolute bottom-10 space-y-3">
           <TouchableOpacity
             onPress={() => navigation.navigate("Login")}
