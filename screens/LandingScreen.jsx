@@ -60,7 +60,7 @@ const LandingScreen = ({ navigation, route }) => {
   const getCategories = async () => {
     try {
       const response = await axios.get(
-        "https://res-server-sigma.vercel.app/api/category/allcategories"
+        "https://ecoserver.vercel.app/api/category/allcategories"
       );
       const collected = response.data;
       setCategories(collected);
@@ -83,7 +83,7 @@ const LandingScreen = ({ navigation, route }) => {
   const getAds = async () => {
     try {
       const response = await axios.get(
-        "https://res-server-sigma.vercel.app/api/ads/allads"
+        "https://ecoserver.vercel.app/api/ads/allads"
       );
       const collectedAds = response.data;
       setAds(collectedAds);

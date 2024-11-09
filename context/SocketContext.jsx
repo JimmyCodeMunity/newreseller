@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "../config";
+import { ALERT_TYPE, Toast } from "react-native-alert-notification";
 
 const SocketContext = createContext();
 
@@ -14,6 +15,13 @@ export const SocketContextProvider = ({ children }) => {
   const { userdata, authUser } = useContext(AuthContext);
   const userId = userdata?.userdata?._id;
   console.log("useridis",userId)
+
+  if(userId) {
+    Toast.show({
+      type: ALERT_TYPE.SUCCESS,
+      title: `Welcome Back ${userdata?.userdata?.firstName}`,
+    })
+  }
 
   useEffect(() => {
     if (authUser) {

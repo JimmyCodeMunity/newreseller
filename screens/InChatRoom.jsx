@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef, useLayoutEffect } from "react";
 import {
   View,
   Text,
@@ -16,9 +16,10 @@ import { AuthContext } from "../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { BASE_URL } from "../config";
+import { ALERT_TYPE, Toast } from "react-native-alert-notification";
 
 const InChatRoom = ({ navigation, route }) => {
-  const { companyName, companyId } = route.params;
+  const { companyName,companyId } = route.params;
   const { userdata } = useContext(AuthContext);
   const userId = userdata?.userdata?._id;
   const { socket } = useSocketContext();
@@ -31,48 +32,34 @@ const InChatRoom = ({ navigation, route }) => {
     getMessages();
   }, []);
 
-  useEffect(() => {
-    const handleReceiveMessage = (messageData) => {
-      // Log the structure of messageData to understand its structure
-      console.log("New message received:", messageData);
-  
-      // Check if the message is relevant to this chat
-      if (
-        (messageData.sender === companyId && messageData.recipient === userId) ||
-        (messageData.sender === userId && messageData.recipient === companyId)
-      ) {
-        const formattedMessage = {
-          _id: messageData._id || Date.now().toString(), // Ensure _id exists, use timestamp as fallback
-          text: messageData.content || messageData.message, // Check for 'content' or 'message'
-          createdAt: new Date(messageData.timeStamp || messageData.timestamp), // Handle 'timeStamp' or 'timestamp'
-          user: messageData.sender === userId ? "user" : "company",
-          type: messageData.messageType || "text", // Use default "text" if messageType is undefined
-        };
-  
-        setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages, formattedMessage];
-          saveMessages(updatedMessages); // Save messages in AsyncStorage
-          return updatedMessages;
-        });
-      }
-    };
-  
-    // Listen for incoming messages
-    socket?.on("receiveMessage", handleReceiveMessage);
-  
-    // Cleanup event listener on component unmount or dependency change
-    return () => {
-      socket?.off("receiveMessage", handleReceiveMessage);
-    };
-  }, [socket, userId, companyId]);
-  
+  useLayoutEffect(() => {
+    return navigation.setOptions({
+      headerTitle: "",
+      headerLeft: () => {
+        return (
+          <View className="flex-row items-center justify-between space-x-5">
+            <View>
+              <Pressable onPress={() => navigation.goBack()}>
+                <Icon name="chevron-left" size={30} color="black" />
+              </Pressable>
+            </View>
+            <View>
+              <Text className="text-xl font-semibold">
+                {companyName}
+              </Text>
+            </View>
+          </View>
+        );
+      },
+    });
+  });
 
   // Load saved messages from AsyncStorage
   const loadSavedMessages = async () => {
     try {
       const savedMessages = await AsyncStorage.getItem(`messages_${companyId}`);
       if (savedMessages) {
-        setMessages(JSON.parse(savedMessages));
+        setMessages(JSON.parse(savedMessages).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)));
       }
     } catch (error) {
       console.error("Failed to load the saved messages", error.message);
@@ -93,8 +80,7 @@ const InChatRoom = ({ navigation, route }) => {
       const response = await axios.get(`${BASE_URL}/getmessages`, {
         params: { sender: userId, recipient: companyId },
       });
-      const filteredMessages = response.data.filter((msg) => msg.sender && msg.recipient);
-      const formattedMessages = filteredMessages.map((msg) => ({
+      const formattedMessages = response.data.map((msg) => ({
         _id: msg._id,
         text: msg.content,
         createdAt: new Date(msg.timeStamp),
@@ -102,12 +88,53 @@ const InChatRoom = ({ navigation, route }) => {
         type: msg.messageType,
       }));
 
-      setMessages(formattedMessages);
-      saveMessages(formattedMessages);
+      const sortedMessages = formattedMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      setMessages(sortedMessages);
+      saveMessages(sortedMessages);
     } catch (error) {
       console.error("Failed to get messages", error.message);
     }
   };
+
+  useEffect(() => {
+    const handleReceiveMessage = (messageData) => {
+      // Check if the message is relevant to this chat
+      if (
+        (messageData.sender === companyId && messageData.recipient === userId) ||
+        (messageData.sender === userId && messageData.recipient === companyId)
+      ) {
+        
+        // Prevent adding the same message twice for the sender
+        if (messageData.sender === userId) return;
+
+        const newMessage = {
+          _id: messageData._id || Date.now().toString(),
+          text: messageData.content || messageData.message,
+          createdAt: new Date(messageData.timeStamp || messageData.timestamp),
+          user: messageData.sender === userId ? "user" : "company",
+          type: messageData.messageType || "text",
+        };
+  
+        setMessages((prevMessages) => {
+          const updatedMessages = [...prevMessages, newMessage].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+          saveMessages(updatedMessages);
+          return updatedMessages;
+        });
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: `You have a new message`,
+        })
+
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }
+    };
+  
+    socket?.on("receiveMessage", handleReceiveMessage);
+  
+    return () => {
+      socket?.off("receiveMessage", handleReceiveMessage);
+    };
+  }, [socket, userId, companyId]);
 
   // Send message
   const sendMessage = () => {
@@ -115,32 +142,34 @@ const InChatRoom = ({ navigation, route }) => {
     const newMessage = {
       _id: Date.now().toString(),
       text: messageText,
-      sender: userId,
-      messageType: "text",
-      type: "UserMessage",
+      createdAt: new Date(),
+      user: "user", // Mark as user message
+      type: "text",
     };
 
+    // Emit the message through the socket without adding it to the state directly
     socket.emit("sendMessage", {
       sender: userId,
       recipient: companyId,
       content: messageText,
       messageType: "text",
-      type: "UserMessage",
     });
 
+    // Add the message to the state directly for instant display
     setMessages((prevMessages) => {
-      const updatedMessages = [...prevMessages, newMessage];
+      const updatedMessages = [...prevMessages, newMessage].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
       saveMessages(updatedMessages);
       return updatedMessages;
     });
+
     setMessageText("");
   };
 
   return (
-    <SafeAreaView className="py-4 flex-1">
+    <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
-        className="py-4"
         ref={scrollViewRef}
+        className="py-2"
         onContentSizeChange={() =>
           scrollViewRef.current.scrollToEnd({ animated: true })
         }
@@ -151,10 +180,12 @@ const InChatRoom = ({ navigation, route }) => {
             key={message._id}
             style={[
               styles.messageWrapper,
-              message.user === "user" ? styles.userMessage : styles.companyMessage,
+              message.user !== "user" ? styles.userMessage : styles.companyMessage,
             ]}
           >
-            <View style={message.user === "user" ? styles.userBubble : styles.companyBubble}>
+            <View className={`${message.user === "user" ? 'bg-black rounded-tl-md rounded-tr-md rounded-br-md':'bg-orange-500 text-white border border-1 border-orange-200 rounded-tl-md rounded-tr-md rounded-bl-md'} px-3 py-2 px-2`}
+            //  style={message.user === "user" ? styles.userBubble : styles.companyBubble}
+             >
               <Text style={message.user === "user" ? styles.userText : styles.companyText}>
                 {message.text}
               </Text>
@@ -168,10 +199,10 @@ const InChatRoom = ({ navigation, route }) => {
       >
         <View style={styles.inputWrapper}>
           <TextInput
-            className="h-10 w-full flex-1 border border-1 border-slate-300 px-4 rounded-xl"
             placeholder="Type a message..."
             value={messageText}
             onChangeText={setMessageText}
+            style={styles.textInput}
           />
           <Pressable style={styles.sendButton} onPress={sendMessage}>
             <Icon name="send" size={20} color="white" />
@@ -193,9 +224,10 @@ const styles = StyleSheet.create({
   userBubble: { backgroundColor: "black", padding: 12, borderRadius: 8 },
   companyBubble: { backgroundColor: "gray", padding: 12, borderRadius: 8 },
   userText: { color: "white" },
-  companyText: { color: "black" },
+  companyText: { color: "white" },
   inputContainer: { borderTopWidth: 1, borderColor: "gray", padding: 12 },
   inputWrapper: { flexDirection: "row", alignItems: "center" },
+  textInput: { flex: 1, height: 40, borderWidth: 1, borderColor: "gray", borderRadius: 20, paddingHorizontal: 10 },
   sendButton: {
     marginLeft: 8,
     backgroundColor: "orange",

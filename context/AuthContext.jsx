@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { BASE_URL } from '../config';
 import { Alert } from 'react-native';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 
 export const AuthContext = createContext();
 
@@ -17,13 +18,17 @@ export const AuthProvider = ({ children }) => {
   const getUserdata = async (token) => {
     try {
       if (token) {
-        const response = await axios.post(`${BASE_URL}/getuserdata`, {
+        const response = await axios.post(`https://ecoserver.vercel.app/api/user/getuserdata`, {
           token,
         });
         const userData = response.data;
         setUserdata(userData); // Save user data in state
         await AsyncStorage.setItem('userdata', JSON.stringify(userData)); // Persist user data
         console.log('userdata from the API', userData);
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: `Welcome Back ${userdata?.userdata?.firstName}`,
+        })
       }
     } catch (error) {
       console.error('Error fetching user data', error);
@@ -42,6 +47,7 @@ export const AuthProvider = ({ children }) => {
           await getUserdata(token); // Fetch and set userdata
           setAuthUser(token); // Set authUser once token is available
           setIsLoggedIn(true);
+          
         }
       } catch (e) {
         console.error('Failed to fetch auth status', e);
@@ -55,9 +61,11 @@ export const AuthProvider = ({ children }) => {
   // Handle login
   const login = async (email, password) => {
     setLoading(true);
+    console.log("details", email, password);
     try {
-      const response = await axios.post(`${BASE_URL}/login`, { email, password });
+      const response = await axios.post(`https://ecoserver.vercel.app/api/user/login`, { email, password });
       const user = response.data;
+      console.log("response", user);
 
       if (user.status === 'ok' && user.data) {
         await AsyncStorage.setItem('token', user.data);  // Store the actual token

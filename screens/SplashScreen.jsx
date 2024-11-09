@@ -28,11 +28,11 @@ const SplashScreen = ({ navigation }) => {
     setLoading(false);
   };
 
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     // CheckLogin();
-  //   }, 3000);
-  // }, []);
+  useEffect(() => {
+    setTimeout(() => {
+      CheckLogin();
+    }, 3000);
+  }, []);
 
   //check login status
   const CheckLogin = async () => {

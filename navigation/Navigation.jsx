@@ -147,7 +147,7 @@ const Navigation = () => {
               <Stack.Screen
                 name="ChatRoom"
                 component={ChatRoom}
-                options={{ headerShown: true ,presentation:"modal"}}
+                options={{ headerShown: true }}
               />
               <Stack.Screen
                 name="InChatRoom"
