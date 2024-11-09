@@ -75,7 +75,7 @@ const InChatRoom = ({ navigation, route }) => {
         setMessages(JSON.parse(savedMessages));
       }
     } catch (error) {
-      console.error("Failed to load saved messages", error.message);
+      console.error("Failed to load the saved messages", error.message);
     }
   };
 
