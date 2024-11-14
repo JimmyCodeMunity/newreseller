@@ -1,190 +1,105 @@
-import React, { useState, useEffect, useContext } from "react";
 import {
   SafeAreaView,
+  StyleSheet,
   Text,
   View,
+  Platform,
   TextInput,
   FlatList,
   TouchableOpacity,
   Pressable,
 } from "react-native";
+import React from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
-import { BASE_URL } from "../config";
-import { ALERT_TYPE, Toast } from "react-native-alert-notification";
-import { useSocketContext } from "../context/SocketContext";
 
-const ChatScreen = ({ navigation }) => {
-  const { userdata } = useContext(AuthContext);
-  const userId = userdata?.userdata?._id;
-  const [chatList, setChatList] = useState([]);
-  const [search, setSearch] = useState("");
-  const {socket} = useSocketContext()
+const ChatScreen = ({ navigation, route }) => {
+  const chats = [
+    {
+      id: 1,
+      name: "John Doe",
+      message: "Hi, How are you?",
+      timestamp: "10:00 AM",
+    },
+    {
+      id: 2,
+      name: "Jane Smith",
+      message: "Hi, I'm looking for a product.",
+      timestamp: "10:10 AM",
+    },
+    {
+      id: 3,
+      name: "Suel",
+      message: "I found it!",
+      timestamp: "10:20 AM",
+    },
+    {
+      id: 4,
+      name: "Clava Smith",
+      message: "Thank you!",
+      timestamp: "10:30 AM",
+    },
+  ];
 
-  useEffect(() => {
-    fetchChats();
-  }, []);
-
-  // listen forn any new chat
-  useEffect(()=>{
-    socket?.on("receiveMessage",(messageData)=>{
-      fetchChats();
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: `New message`,
-        textBody:`${messageData.content}`,
-      });
-      console.log("message data", messageData)
-      
-    })
-
-  },[])
-
-  const fetchChats = async () => {
-    try {
-      const response = await axios.get(`https://ecoserver.vercel.app/api/user/chats`, { params: { userId } });
-      const messages = response.data;
-      // console.log("Fetched messages:", messages); // Check fetched data structure
-      
-      // Toast.show({
-      //   type: ALERT_TYPE.SUCCESS,
-      //   title: `Chats collected`,
-      // });
-
-      // Process messages to store the latest message per unique recipient
-      const uniqueChats = {};
-      messages.forEach((msg) => {
-        if (msg.sender && msg.recipient) {
-          const otherUser = msg.sender._id === userId ? msg.recipient : msg.sender;
-
-          // Keep only the latest message for each unique recipient
-          if (!uniqueChats[otherUser._id] || new Date(msg.timestamp) > new Date(uniqueChats[otherUser._id].timestamp)) {
-            uniqueChats[otherUser._id] = {
-              id: otherUser._id,
-              name: `${otherUser.firstName} ${otherUser.lastName}`,
-              companyName: otherUser.companyName,
-              message: msg.content,
-              timestamp: new Date(msg.timestamp).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
-            };
-          }
-        }
-      });
-
-      const chatListData = Object.values(uniqueChats).filter((chat) => chat); // Remove any undefined values
-      // console.log("Processed chatList data:", chatListData); // Check processed chat list
-      setChatList(chatListData); // Set unique chats with latest message
-
-    } catch (error) {
-      console.error("Failed to fetch chats:", error.message);
-    }
-  };
-
-  const RenderChat = ({ chat }) => (
-    <TouchableOpacity
-      onPress={() =>
-        navigation.navigate("ChatRoom", {
-          companyName: chat?.companyName,
-          companyId: chat?.id,
-        })
-      }
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: "#e5e7eb",
-      }}
-    >
-      <View style={{ width: "20%", justifyContent: "center", alignItems: "center" }}>
-        <View
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            backgroundColor: "#e2e8f0",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ fontSize: 24, color: "#475569" }}>{chat?.companyName?.charAt(0)}</Text>
+  const RenderChat = ({ chat }) => {
+    return (
+      <TouchableOpacity
+      onPress={()=>navigation.navigate('ChatRoom',{chat:chat})}
+      className="w-full h-12 mb-4 flex-row items-center space-x-1 justify-between">
+        <View className="h-full w-[20%] justify-center items-center">
+          <View className="w-12 h-12 bg-slate-200 rounded-full justify-center items-center">
+          <Text className="text-2xl text-slate-600 font-semibold">{chat?.name.slice(0,1)}</Text></View>
         </View>
-      </View>
+        <View className="h-full w-[80%] border border-1 pr-4 flex-row items-center justify-between border-slate-200 border-t-0 border-r-0 border-l-0">
+          <View>
+            <Text className="text-lg">{chat?.name}</Text>
+            <Text className="text-slate-300 text-sm">
+              {chat?.message.slice(0, 16) + "..."}
+            </Text>
+          </View>
+          <View>
+            <Text className="text-sm text-slate-400">{chat?.timestamp}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+  return (
+    <SafeAreaView className="flex-1 bg-white">
       <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          width: "80%",
-          paddingRight: 16,
-        }}
+        className={`${
+          Platform.OS === "android" ? "mt-8" : "mt-1"
+        } flex py-8 flex-row items-center justify-between w-full px-4`}
       >
         <View>
-          <Text style={{ fontSize: 18, fontWeight: "500" }}>{chat?.companyName}</Text>
-          <Text style={{ color: "#94a3b8", fontSize: 14 }}>
-            {chat?.message.length > 16 ? chat.message.slice(0, 16) + "..." : chat?.message}
-          </Text>
+          <Text className="text-2xl font-semibold">Chats</Text>
         </View>
-        <Text style={{ fontSize: 12, color: "#94a3b8" }}>{chat?.timestamp}</Text>
-      </View>
-    </TouchableOpacity>
-  );
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-      <View style={{
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingVertical: 16,
-        paddingHorizontal: 16,
-      }}>
-        <Text style={{ fontSize: 24, fontWeight: "600" }}>Chats</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", space: 8 }}>
-          <Pressable
-            style={{
-              backgroundColor: "black",
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              justifyContent: "center",
-              alignItems: "center",
-              marginRight: 8,
-            }}
-          >
-            <Icon name="plus" size={25} color="white" />
+        <View className="flex-row space-x-3 items-center">
+          <Pressable className="bg-black h-10 w-10 rounded-full justify-center items-center">
+          <Icon name="plus" size={25} color="white" />
           </Pressable>
           <Icon name="menu" size={25} />
         </View>
       </View>
 
-      <View style={{ paddingHorizontal: 16, marginVertical: 8 }}>
+      <View className="justify-center items-center w-full px-4">
         <TextInput
-          value={search}
-          onChangeText={setSearch}
           placeholder="Search Supplier Name"
-          style={{
-            height: 40,
-            borderWidth: 1,
-            borderColor: "#cbd5e1",
-            borderRadius: 20,
-            paddingHorizontal: 12,
-          }}
+          className="h-12 rounded-xl h-10 px-4 border border-1 border-slate-300 w-full"
         />
-      </View>
 
-      <FlatList
-        data={chatList}
-        renderItem={({ item }) => <RenderChat chat={item} />}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text style={{ textAlign: "center", marginTop: 20 }}>No chats available</Text>}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-      />
+        {/* chats */}
+        <View className="w-full my-5">
+          <FlatList
+            data={chats}
+            renderItem={({ item }) => <RenderChat chat={item} />}
+            keyExtractor={(item) => item.id}
+          />
+        </View>
+      </View>
     </SafeAreaView>
   );
 };
 
 export default ChatScreen;
+
+const styles = StyleSheet.create({});

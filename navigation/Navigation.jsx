@@ -39,6 +39,8 @@ import ChatScreen from "../screens/ChatScreen";
 import ChatRoom from "../screens/ChatRoom";
 import InChatRoom from "../screens/InChatRoom";
 import { AuthContext } from "../context/AuthContext";
+import ChannelChatRoom from "../screens/ChannelChat";
+import ChannelsScreen from "../screens/ChannelsScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -152,7 +154,12 @@ const Navigation = () => {
               <Stack.Screen
                 name="InChatRoom"
                 component={InChatRoom}
-                options={{ headerShown: true ,presentation:"modal"}}
+                options={{ headerShown: true, presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="ChannelChatRoom"
+                component={ChannelChatRoom}
+                options={{ headerShown: true }}
               />
               <Stack.Screen
                 name="policy"
@@ -205,15 +212,15 @@ const BottomTabs = ({ route }) => {
             let iconName;
 
             if (route.name === "Shop") {
-              iconName = "home";
-            } else if (route.name === "Categories") {
-              iconName = "cart";
+              iconName = "home-outline";
             } else if (route.name === "Search") {
               iconName = "magnify";
+            } else if (route.name === "MyChannels") {
+              iconName = "alpha-c-circle-outline";
             } else if (route.name === "Settings") {
-              iconName = "cog";
-            } else if ((route.name = "Chats")) {
-              iconName = "chat";
+              iconName = "cog-outline";
+            } else if (route.name === "Chats") {
+              iconName = "chat-outline";
             }
 
             return <Icon name={iconName} size={size} color={color} />;
@@ -241,6 +248,12 @@ const BottomTabs = ({ route }) => {
         <Tab.Screen
           name="Chats"
           component={ChatScreen}
+          initialParams={{ email }}
+          options={{ headerShown: false }}
+        />
+        <Tab.Screen
+          name="MyChannels"
+          component={ChannelsScreen}
           initialParams={{ email }}
           options={{ headerShown: false }}
         />
