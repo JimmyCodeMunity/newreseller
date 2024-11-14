@@ -101,14 +101,14 @@ const ChannelChatRoom = ({ navigation, route }) => {
   };
 
   useEffect(() => {
-    const handleReceiveMessage = (messageData) => {
-      if (messageData.channelId === channelId) {
+    const handleReceiveMessage = (finalData) => {
+      if (finalData.channelId === channelId) {
         const newMessage = {
-          _id: messageData._id || Date.now().toString(),
-          text: messageData.content || messageData.message,
-          createdAt: new Date(messageData.timeStamp || messageData.timestamp),
-          user: messageData.sender === userId ? "user" : "company",
-          type: messageData.messageType || "text",
+          _id: finalData._id || Date.now().toString(),
+          text: finalData.content || finalData.message,
+          createdAt: new Date(finalData.timeStamp || finalData.timestamp),
+          user: finalData.sender === userId ? "user" : "company",
+          type: finalData.messageType || "text",
         };
 
         setMessages((prevMessages) => {
@@ -129,7 +129,9 @@ const ChannelChatRoom = ({ navigation, route }) => {
       }
     };
 
-    socket?.on("receiveMessage", handleReceiveMessage);
+    // socket?.on("receiveMessage", handleReceiveMessage);
+    socket?.on("receive-channel-message", handleReceiveMessage);
+
 
     return () => {
       socket?.off("receiveMessage", handleReceiveMessage);

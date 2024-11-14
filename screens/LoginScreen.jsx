@@ -18,8 +18,8 @@ import { BASE_URL } from "../config";
 import { AuthContext } from "../context/AuthContext";
 
 const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState("von@gmail.com");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { userdata, loading, login,setLoading } = useContext(AuthContext);
   const [isConnected, setIsConnected] = useState(false);
 
