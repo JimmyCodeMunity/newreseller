@@ -45,8 +45,9 @@ const ChannelsScreen = ({ navigation }) => {
 
   const fetchChannels = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/get-channels/${userId}`);
+      const response = await axios.get(`https://ecoserver.vercel.app/api/user/get-channels/${userId}`);
       const data = response.data;
+      console.log("thuis convo",data)
       setChannels(data);
       setFilteredChannels(data); // Set initial filtered data to all channels
     } catch (error) {

@@ -28,11 +28,11 @@ const SplashScreen = ({ navigation }) => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    setTimeout(() => {
-      CheckLogin();
-    }, 3000);
-  }, []);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     CheckLogin();
+  //   }, 3000);
+  // }, []);
 
   //check login status
   const CheckLogin = async () => {
@@ -64,14 +64,14 @@ const SplashScreen = ({ navigation }) => {
         />
         
 
-        {loading && (
+        {/* {loading && (
           <View className="justify-center items-center my-3">
             <Text className="text-slate-600 font-semibold text-xl">
               Checking Login status...
             </Text>
             <ActivityIndicator size="large" color="black" />
           </View>
-        )}
+        )} */}
       </View>
 
       {!loading && (

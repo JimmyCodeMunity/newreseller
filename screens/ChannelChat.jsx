@@ -78,7 +78,7 @@ const ChannelChatRoom = ({ navigation, route }) => {
   const getMessages = async () => {
     try {
       const response = await axios.get(
-        `${BASE_URL}/get-channel-messages/${channelId}`
+        `https://ecoserver.vercel.app/api/user/get-channel-messages/${channelId}`
       );
       // console.log("channel messages", response.data);
 
@@ -165,6 +165,11 @@ const ChannelChatRoom = ({ navigation, route }) => {
   };
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 120 : 90}
+    >
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
         ref={scrollViewRef}
@@ -204,8 +209,8 @@ const ChannelChatRoom = ({ navigation, route }) => {
           </View>
         ))}
       </ScrollView>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      <View
+        className="px-4 py-2"
         style={styles.inputContainer}
       >
         <View style={styles.inputWrapper}>
@@ -219,8 +224,9 @@ const ChannelChatRoom = ({ navigation, route }) => {
             <Icon name="send" size={20} color="white" />
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -235,7 +241,7 @@ const styles = StyleSheet.create({
   companyBubble: { padding: 12, borderRadius: 8 },
   userText: { color: "white" },
   companyText: { color: "white" },
-  inputContainer: { borderTopWidth: 1, borderColor: "gray", padding: 12 },
+  inputContainer: { borderColor: "gray" },
   inputWrapper: { flexDirection: "row", alignItems: "center" },
   textInput: {
     flex: 1,

@@ -128,7 +128,7 @@ const ChatScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 16, paddingHorizontal: 16 }}>
+      <View className={`${Platform.OS === 'android'?'mt-12':'mt-6'}`} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 16, paddingHorizontal: 16 }}>
         <Text style={{ fontSize: 24, fontWeight: "600" }}>Chats</Text>
         <Pressable onPress={ShowSearch} style={{ backgroundColor: "black", width: 40, height: 40, borderRadius: 20, justifyContent: "center", alignItems: "center", marginRight: 8 }}>
           <Icon name="plus" size={25} color="white" />

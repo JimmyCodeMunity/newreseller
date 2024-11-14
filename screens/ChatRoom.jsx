@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext, useRef, useLayoutEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useLayoutEffect,
+} from "react";
 import {
   View,
   Text,
@@ -18,7 +24,7 @@ import axios from "axios";
 import { BASE_URL } from "../config";
 
 const ChatRoom = ({ navigation, route }) => {
-  const { companyName,companyId } = route.params;
+  const { companyName, companyId } = route.params;
   const { userdata } = useContext(AuthContext);
   const userId = userdata?.userdata?._id;
   const { socket } = useSocketContext();
@@ -43,9 +49,7 @@ const ChatRoom = ({ navigation, route }) => {
               </Pressable>
             </View>
             <View>
-              <Text className="text-xl font-semibold">
-                {companyName}
-              </Text>
+              <Text className="text-xl font-semibold">{companyName}</Text>
             </View>
           </View>
         );
@@ -58,7 +62,11 @@ const ChatRoom = ({ navigation, route }) => {
     try {
       const savedMessages = await AsyncStorage.getItem(`messages_${companyId}`);
       if (savedMessages) {
-        setMessages(JSON.parse(savedMessages).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)));
+        setMessages(
+          JSON.parse(savedMessages).sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          )
+        );
       }
     } catch (error) {
       console.error("Failed to load the saved messages", error.message);
@@ -67,7 +75,10 @@ const ChatRoom = ({ navigation, route }) => {
 
   const saveMessages = async (messages) => {
     try {
-      await AsyncStorage.setItem(`messages_${companyId}`, JSON.stringify(messages));
+      await AsyncStorage.setItem(
+        `messages_${companyId}`,
+        JSON.stringify(messages)
+      );
     } catch (error) {
       console.error("Failed to save messages", error.message);
     }
@@ -76,9 +87,12 @@ const ChatRoom = ({ navigation, route }) => {
   // Fetch messages from server
   const getMessages = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/getmessages`, {
-        params: { sender: userId, recipient: companyId },
-      });
+      const response = await axios.get(
+        `https://ecoserver.vercel.app/api/user/getmessages`,
+        {
+          params: { sender: userId, recipient: companyId },
+        }
+      );
       const formattedMessages = response.data.map((msg) => ({
         _id: msg._id,
         text: msg.content,
@@ -87,7 +101,9 @@ const ChatRoom = ({ navigation, route }) => {
         type: msg.messageType,
       }));
 
-      const sortedMessages = formattedMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      const sortedMessages = formattedMessages.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
       setMessages(sortedMessages);
       saveMessages(sortedMessages);
     } catch (error) {
@@ -99,7 +115,8 @@ const ChatRoom = ({ navigation, route }) => {
     const handleReceiveMessage = (messageData) => {
       // Check if the message is relevant to this chat
       if (
-        (messageData.sender === companyId && messageData.recipient === userId) ||
+        (messageData.sender === companyId &&
+          messageData.recipient === userId) ||
         (messageData.sender === userId && messageData.recipient === companyId)
       ) {
         // Prevent adding the same message twice for the sender
@@ -112,9 +129,11 @@ const ChatRoom = ({ navigation, route }) => {
           user: messageData.sender === userId ? "user" : "company",
           type: messageData.messageType || "text",
         };
-  
+
         setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages, newMessage].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+          const updatedMessages = [...prevMessages, newMessage].sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          );
           saveMessages(updatedMessages);
           return updatedMessages;
         });
@@ -122,9 +141,9 @@ const ChatRoom = ({ navigation, route }) => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }
     };
-  
+
     socket?.on("receiveMessage", handleReceiveMessage);
-  
+
     return () => {
       socket?.off("receiveMessage", handleReceiveMessage);
     };
@@ -151,7 +170,9 @@ const ChatRoom = ({ navigation, route }) => {
 
     // Add the message to the state directly for instant display
     setMessages((prevMessages) => {
-      const updatedMessages = [...prevMessages, newMessage].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      const updatedMessages = [...prevMessages, newMessage].sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
       saveMessages(updatedMessages);
       return updatedMessages;
     });
@@ -160,50 +181,69 @@ const ChatRoom = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView
-        ref={scrollViewRef}
-        className="py-2"
-        onContentSizeChange={() =>
-          scrollViewRef.current.scrollToEnd({ animated: true })
-        }
-        style={styles.messagesContainer}
-      >
-        {messages.map((message) => (
-          <View
-            key={message._id}
-            style={[
-              styles.messageWrapper,
-              message.user !== "user" ? styles.userMessage : styles.companyMessage,
-            ]}
-          >
-            <View className={`${message.user === "user" ? 'bg-black rounded-tl-md rounded-tr-md rounded-br-md':'bg-orange-500 text-white border border-1 border-orange-200 rounded-tl-md rounded-tr-md rounded-bl-md'} px-3 py-2 px-2`}
-            //  style={message.user === "user" ? styles.userBubble : styles.companyBubble}
-             >
-              <Text style={message.user === "user" ? styles.userText : styles.companyText}>
-                {message.text}
-              </Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 120 : 90}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView
+          ref={scrollViewRef}
+          className="py-2"
+          onContentSizeChange={() =>
+            scrollViewRef.current.scrollToEnd({ animated: true })
+          }
+          style={styles.messagesContainer}
+        >
+          {messages.map((message) => (
+            <View
+              key={message._id}
+              style={[
+                styles.messageWrapper,
+                message.user !== "user"
+                  ? styles.userMessage
+                  : styles.companyMessage,
+              ]}
+            >
+              <View
+                className={`${
+                  message.user === "user"
+                    ? "bg-black rounded-tl-md rounded-tr-md rounded-br-md"
+                    : "bg-orange-500 text-white border border-1 border-orange-200 rounded-tl-md rounded-tr-md rounded-bl-md"
+                } px-3 py-2 px-2`}
+                //  style={message.user === "user" ? styles.userBubble : styles.companyBubble}
+              >
+                <Text
+                  style={
+                    message.user === "user"
+                      ? styles.userText
+                      : styles.companyText
+                  }
+                >
+                  {message.text}
+                </Text>
+              </View>
             </View>
+          ))}
+        </ScrollView>
+        <View
+          className="px-4 pt-3"
+          style={styles.inputContainer}
+        >
+          <View style={styles.inputWrapper}>
+            <TextInput
+              placeholder="Type a message..."
+              value={messageText}
+              onChangeText={setMessageText}
+              style={styles.textInput}
+            />
+            <Pressable style={styles.sendButton} onPress={sendMessage}>
+              <Icon name="send" size={20} color="white" />
+            </Pressable>
           </View>
-        ))}
-      </ScrollView>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.inputContainer}
-      >
-        <View style={styles.inputWrapper}>
-          <TextInput
-            placeholder="Type a message..."
-            value={messageText}
-            onChangeText={setMessageText}
-            style={styles.textInput}
-          />
-          <Pressable style={styles.sendButton} onPress={sendMessage}>
-            <Icon name="send" size={20} color="white" />
-          </Pressable>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -219,9 +259,16 @@ const styles = StyleSheet.create({
   companyBubble: { backgroundColor: "gray", padding: 12, borderRadius: 8 },
   userText: { color: "white" },
   companyText: { color: "white" },
-  inputContainer: { borderTopWidth: 1, borderColor: "gray", padding: 12 },
+  inputContainer: {  borderColor: "gray"},
   inputWrapper: { flexDirection: "row", alignItems: "center" },
-  textInput: { flex: 1, height: 40, borderWidth: 1, borderColor: "gray", borderRadius: 20, paddingHorizontal: 10 },
+  textInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "gray",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+  },
   sendButton: {
     marginLeft: 8,
     backgroundColor: "orange",
