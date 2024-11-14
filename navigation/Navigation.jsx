@@ -41,6 +41,7 @@ import InChatRoom from "../screens/InChatRoom";
 import { AuthContext } from "../context/AuthContext";
 import ChannelChatRoom from "../screens/ChannelChat";
 import ChannelsScreen from "../screens/ChannelsScreen";
+import ContactList from "../screens/ContactList";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -160,6 +161,11 @@ const Navigation = () => {
                 name="ChannelChatRoom"
                 component={ChannelChatRoom}
                 options={{ headerShown: true }}
+              />
+              <Stack.Screen
+                name="ContactList"
+                component={ContactList}
+                options={{ headerShown: true ,presentation:'modal'}}
               />
               <Stack.Screen
                 name="policy"

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext, useRef, useLayoutEffect } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useLayoutEffect,
+} from "react";
 import {
   View,
   Text,
@@ -19,7 +25,7 @@ import { BASE_URL } from "../config";
 import { ALERT_TYPE, Toast } from "react-native-alert-notification";
 
 const ChannelChatRoom = ({ navigation, route }) => {
-  const { companyName,companyId } = route.params;
+  const { channelName, channelId } = route.params;
   const { userdata } = useContext(AuthContext);
   const userId = userdata?.userdata?._id;
   const { socket } = useSocketContext();
@@ -34,32 +40,24 @@ const ChannelChatRoom = ({ navigation, route }) => {
 
   useLayoutEffect(() => {
     return navigation.setOptions({
-      headerTitle: "",
-      headerLeft: () => {
-        return (
-          <View className="flex-row items-center justify-between space-x-5">
-            <View>
-              <Pressable onPress={() => navigation.goBack()}>
-                <Icon name="chevron-left" size={30} color="black" />
-              </Pressable>
-            </View>
-            <View>
-              <Text className="text-xl font-semibold">
-                {companyName}
-              </Text>
-            </View>
-          </View>
-        );
-      },
+      headerTitle: channelName,
+      headerLeft: () => (
+        <Pressable onPress={() => navigation.goBack()}>
+          <Icon name="chevron-left" size={30} color="black" />
+        </Pressable>
+      ),
     });
   });
 
-  // Load saved messages from AsyncStorage
   const loadSavedMessages = async () => {
     try {
-      const savedMessages = await AsyncStorage.getItem(`messages_${companyId}`);
+      const savedMessages = await AsyncStorage.getItem(`messages_${channelId}`);
       if (savedMessages) {
-        setMessages(JSON.parse(savedMessages).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)));
+        setMessages(
+          JSON.parse(savedMessages).sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          )
+        );
       }
     } catch (error) {
       console.error("Failed to load the saved messages", error.message);
@@ -68,27 +66,33 @@ const ChannelChatRoom = ({ navigation, route }) => {
 
   const saveMessages = async (messages) => {
     try {
-      await AsyncStorage.setItem(`messages_${companyId}`, JSON.stringify(messages));
+      await AsyncStorage.setItem(
+        `messages_${channelId}`,
+        JSON.stringify(messages)
+      );
     } catch (error) {
       console.error("Failed to save messages", error.message);
     }
   };
 
-  // Fetch messages from server
   const getMessages = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/getmessages`, {
-        params: { sender: userId, recipient: companyId },
-      });
-      const formattedMessages = response.data.map((msg) => ({
+      const response = await axios.get(
+        `${BASE_URL}/get-channel-messages/${channelId}`
+      );
+      // console.log("channel messages", response.data);
+
+      const formattedMessages = response.data.messages.map((msg) => ({
         _id: msg._id,
         text: msg.content,
-        createdAt: new Date(msg.timeStamp),
-        user: msg.sender === userId ? "user" : "company",
+        createdAt: new Date(msg.timeStamp || msg.timestamp), // Ensure the date is properly parsed
+        user: msg.sender?._id === userId ? "user" : "company", // Check if sender exists, then compare with userId
         type: msg.messageType,
       }));
 
-      const sortedMessages = formattedMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      const sortedMessages = formattedMessages.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
       setMessages(sortedMessages);
       saveMessages(sortedMessages);
     } catch (error) {
@@ -98,15 +102,7 @@ const ChannelChatRoom = ({ navigation, route }) => {
 
   useEffect(() => {
     const handleReceiveMessage = (messageData) => {
-      // Check if the message is relevant to this chat
-      if (
-        (messageData.sender === companyId && messageData.recipient === userId) ||
-        (messageData.sender === userId && messageData.recipient === companyId)
-      ) {
-        
-        // Prevent adding the same message twice for the sender
-        if (messageData.sender === userId) return;
-
+      if (messageData.channelId === channelId) {
         const newMessage = {
           _id: messageData._id || Date.now().toString(),
           text: messageData.content || messageData.message,
@@ -114,50 +110,53 @@ const ChannelChatRoom = ({ navigation, route }) => {
           user: messageData.sender === userId ? "user" : "company",
           type: messageData.messageType || "text",
         };
-  
+
         setMessages((prevMessages) => {
-          const updatedMessages = [...prevMessages, newMessage].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+          const updatedMessages = [...prevMessages, newMessage].sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+          );
           saveMessages(updatedMessages);
           return updatedMessages;
         });
+
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
-          title: `You have a new message`,
-        })
+          title: "New Message",
+          textBody: "You have a new message",
+        });
 
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }
     };
-  
+
     socket?.on("receiveMessage", handleReceiveMessage);
-  
+
     return () => {
       socket?.off("receiveMessage", handleReceiveMessage);
     };
-  }, [socket, userId, companyId]);
+  }, [socket, userId, channelId]);
 
-  // Send message
-  const sendMessage = () => {
+  const sendChannelMessage = () => {
     if (!messageText.trim()) return;
     const newMessage = {
       _id: Date.now().toString(),
       text: messageText,
       createdAt: new Date(),
-      user: "user", // Mark as user message
+      user: "user",
       type: "text",
     };
 
-    // Emit the message through the socket without adding it to the state directly
-    socket.emit("sendMessage", {
+    socket.emit("send-channel-message", {
+      channelId: channelId,
       sender: userId,
-      recipient: companyId,
       content: messageText,
       messageType: "text",
     });
 
-    // Add the message to the state directly for instant display
     setMessages((prevMessages) => {
-      const updatedMessages = [...prevMessages, newMessage].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      const updatedMessages = [...prevMessages, newMessage].sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
       saveMessages(updatedMessages);
       return updatedMessages;
     });
@@ -165,38 +164,40 @@ const ChannelChatRoom = ({ navigation, route }) => {
     setMessageText("");
   };
 
-
-  const sendChannelMessage = async()=>{
-    socket?.emit("send-channel-message",{
-        channelId:companyId,
-        sender:userId,
-        content:messageText,
-        messageType: "text",
-    })
-  }
-
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView
         ref={scrollViewRef}
-        className="py-2"
-        onContentSizeChange={() =>
-          scrollViewRef.current.scrollToEnd({ animated: true })
-        }
+        className="mt-5"
         style={styles.messagesContainer}
+        onContentSizeChange={() =>
+          scrollViewRef.current?.scrollToEnd({ animated: true })
+        }
       >
         {messages.map((message) => (
           <View
             key={message._id}
             style={[
               styles.messageWrapper,
-              message.user !== "user" ? styles.userMessage : styles.companyMessage,
+              message.user === "user"
+                ? styles.userMessage
+                : styles.companyMessage,
             ]}
           >
-            <View className={`${message.user === "user" ? 'bg-black rounded-tl-md rounded-tr-md rounded-br-md':'bg-orange-500 text-white border border-1 border-orange-200 rounded-tl-md rounded-tr-md rounded-bl-md'} px-3 py-2 px-2`}
-            //  style={message.user === "user" ? styles.userBubble : styles.companyBubble}
-             >
-              <Text style={message.user === "user" ? styles.userText : styles.companyText}>
+            <View
+              style={
+                message.user === "user"
+                  ? styles.userBubble
+                  : styles.companyBubble
+              }
+
+              className={`${message.user === "user" ? 'bg-black':'bg-orange-500'}`}
+            >
+              <Text
+                style={
+                  message.user === "user" ? styles.userText : styles.companyText
+                }
+              >
                 {message.text}
               </Text>
             </View>
@@ -226,18 +227,24 @@ const ChannelChatRoom = ({ navigation, route }) => {
 export default ChannelChatRoom;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "white" },
   messagesContainer: { flex: 1, paddingHorizontal: 16 },
   messageWrapper: { width: "100%", marginBottom: 8 },
-  userMessage: { alignItems: "flex-end" },
-  companyMessage: { alignItems: "flex-start" },
-  userBubble: { backgroundColor: "black", padding: 12, borderRadius: 8 },
-  companyBubble: { backgroundColor: "gray", padding: 12, borderRadius: 8 },
+  userMessage: { alignItems: "flex-start" },
+  companyMessage: { alignItems: "flex-end" },
+  userBubble: {padding: 12, borderRadius: 8 },
+  companyBubble: { padding: 12, borderRadius: 8 },
   userText: { color: "white" },
   companyText: { color: "white" },
   inputContainer: { borderTopWidth: 1, borderColor: "gray", padding: 12 },
   inputWrapper: { flexDirection: "row", alignItems: "center" },
-  textInput: { flex: 1, height: 40, borderWidth: 1, borderColor: "gray", borderRadius: 20, paddingHorizontal: 10 },
+  textInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "gray",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+  },
   sendButton: {
     marginLeft: 8,
     backgroundColor: "orange",

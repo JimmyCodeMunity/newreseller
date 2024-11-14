@@ -25,10 +25,7 @@ export const AuthProvider = ({ children }) => {
         setUserdata(userData); // Save user data in state
         await AsyncStorage.setItem('userdata', JSON.stringify(userData)); // Persist user data
         console.log('userdata from the API', userData);
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          title: `Welcome Back ${userdata?.userdata?.firstName}`,
-        })
+        
       }
     } catch (error) {
       console.error('Error fetching user data', error);
